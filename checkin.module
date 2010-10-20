@@ -1,0 +1,591 @@
+<?php
+
+define("CHECKIN_STATUS_PENDING", 0, TRUE);
+define("CHECKIN_STATUS_OK", 1, TRUE);
+define("CHECKIN_STATUS_ERROR", 2, TRUE);
+define("CHECKIN_DEFAULT_IMAGE_PATH", 'checkin_images', TRUE);
+
+/**
+ * Implementations of hook_perm().
+ */
+function checkin_perm() {
+  return array('administer places');
+}
+
+/**
+ * Implementations of hook_menu().
+ */
+function checkin_menu() {
+  $items['admin/settings/checkin'] = array(
+    'title' =>  'Checkin',
+    'description' => t('Check in application for Facebook'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('checkin_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'checkin.admin.inc',
+  );
+  $items['admin/content/places'] = array(
+    'title' => t('Manage places'),
+    'description' => t('List node type places.'),
+    'page callback' => 'checkin_places_overview',
+    'access arguments' => array('administer checkin'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'checkin.admin.inc',
+  );
+  $items['admin/content/checkin'] = array(
+    'title' => t('Manage checkin'),
+    'description' => t('List checkin place.'),
+    'page callback' => 'checkin_checkin_overview',
+    'access arguments' => array('administer checkin'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'checkin.admin.inc',
+  );
+  $items['checkin/register'] = array(
+    'title' => t('Register'),
+    'description' => t('Register facebook data.'),
+    'page callback' => 'checkin_register',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'checkin.pages.inc',
+  );
+  $items['checkin/save'] = array(
+    'title' => t('Save'),
+    'description' => t('Save checkin data'),
+    'page callback' => 'checkin_save',
+    'access callback' => 'checkin_user_access',
+    'type' => MENU_CALLBACK,
+  );
+  $items['checkin/qr/%/%'] = array(
+    'title' => t('Callback receiver'),
+    'description' => t('Wait for QRDecode server send back the data'),
+    'page callback' => 'checkin_qr',
+    'page arguments' => array(2, 3),
+    'access callback' => 'checkin_qr_access',
+    'type' => MENU_CALLBACk,
+  );
+  $items['checkin/qr/job/%/status'] = array(
+    'title' => t('Callback receiver'),
+    'description' => t('Check job status'),
+    'page callback' => 'job_handler',
+    'page arguments' => array(3),
+    'access callback' => 'checkin_qr_access',
+    'type' => MENU_CALLBACk,
+  );
+  $items['checkin'] = array(
+    'title' => t('Choose photos'),
+    'description' => t('Choose photos to check in'),
+    'page callback' => 'checkin_choose_photos',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'checkin.pages.inc',
+  );
+  $items['test'] = array(
+    'title' => t('Test'),
+    'page callback' => 'checkin_test',
+    'access arguments' => array('access content'),
+  );
+  return $items;
+}
+
+function checkin_test() {
+  /*$vars = array(
+    'cid' => 2,
+    'place_id' => 20,
+    'status' => CHECKIN_STATUS_OK,
+    'status_updated' => time(),
+  );
+  $c = _checkin_save($vars);
+  drupal_set_message(print_r($c, 1));*/
+  checkin_publish('test', 'http://opendream.co.th/files/opendream_logo.png', $fbuid);
+  return '';
+}
+
+/**
+ * Access callback for save data.
+ * TODO
+ */
+function checkin_user_access() {
+  
+  return TRUE;
+}
+
+/**
+ * Access callback for QR service.
+ * TODO
+ */
+function checkin_qr_access() {
+  
+  return TRUE;
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function checkin_cron() {
+
+}
+
+/**
+ * Implementation of hook_node_info().
+ */
+function checkin_node_info() {
+  $info['places'] = array(
+    'name' => t('Places'),
+    'module' => 'checkin',
+    'description' => t('Places information'),
+    'has_title' => TRUE,
+    'title_label' => t('Place name'),
+    'has_body' => TRUE,
+    'body_label' => t('Place description'),
+  );
+  return $info;
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function checkin_form(&$node, $form_state) {
+  $type = node_get_types('type', $node);
+  
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5,
+  );
+  
+  if ($type->has_body) {
+    $form['body'] = array(
+      '#type' => 'textarea',
+      '#title' => check_plain($type->body_label),
+      '#required' => TRUE,
+      '#default_value' => $node->body,
+      '#weight' => -5,
+    );
+  }
+  
+  if ($type->type == 'places') {
+    $form['title']['#description'] = t('Enter place name as key or machine name such as bangkok, doi-suthep.');
+    if (isset($form['body'])) {
+      $form['body']['#description'] = t('Describe the place.');
+    }
+  }
+  
+  return $form;
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function checkin_load($node) {
+
+}
+
+/**
+ * Implementation of hook_insert().
+ */
+function checkin_insert($node) {
+
+}
+
+/**
+ * Implementation of hook_update().
+ */
+function checkin_update($node) {
+
+}
+
+/**
+ * Implementation of hook_delete().
+ */
+function checkin_delete($node) {
+
+}
+
+/**
+ * Implementation of hook_view().
+ */
+function checkin_view($node, $teaser = FALSE, $page = FALSE) {
+
+}
+
+/**
+ * Debug message.
+ */
+function dm($msg) {
+  drupal_set_message((is_object($msg) || is_array($msg)) ? '<pre>'. print_r($msg, 1) .'</pre>' : $msg);
+}
+
+/**
+ * Facebook register.
+ * TODO
+ */
+function checkin_register() {
+  $me = checkin_facebook_login();
+  
+  // Login success.
+  if ($me) {
+  
+    dm($me);
+    
+    // Is fbuid this registered?
+    if (!checkin_is_registered($me['id'])) {
+      // Register new user account.
+      $account = array(
+        'name' => $me['id'],
+        'email' => $me['email'],
+        'pass' => md5($me['id']),
+      );
+    }
+    
+    drupal_goto('checkin');
+    return;
+  }
+  
+  drupal_set_message(t('Login to facebook failed. Something wrong.'), 'error');
+}
+
+function checkin_is_registered($fbuid) {
+
+}
+
+/**
+ * Get facebook object.
+ */
+function checkin_facebook() {
+  require_once drupal_get_path('module', 'checkin') .'/lib/facebook.php';
+   
+  $appId = variable_get('checkin_app_api_key', '');
+  $secret = variable_get('checkin_app_secret_key', '');
+  
+  $facebook = new Facebook(array(
+    'appId'  => $appId,
+    'secret' => $secret,
+    'cookie' => true,
+  ));
+  
+  return $facebook;
+}
+
+/**
+ * Facebook login.
+ */
+function checkin_facebook_login() {
+  
+  $facebook = checkin_facebook();
+  
+  $session = $facebook->getSession();
+
+  $me = null;
+  // Session based API call.
+  if ($session) {
+    try {
+      //$uid = $facebook->getUser();
+      $me = $facebook->api('/me');
+    } catch (FacebookApiException $e) {
+      error_log($e);
+    }
+  }
+
+  // Authenticate permissions.
+  if (!$me) {
+    $perms = array(
+      'user_photos',
+    );
+    
+    $loginUrl = $facebook->getLoginUrl(array(
+      'req_perms' => implode(',', $perms),
+      'next' => url('checkin', array('absolute' => TRUE)),
+      'cancel_url' => url('<front>', array('absolute' => TRUE)),
+    ));
+    
+    drupal_goto($loginUrl);
+  }
+  return $me;
+}
+
+/**
+ * Get Facebook uid.
+ */
+function checkin_get_fbuid() {
+  $me = checkin_facebook_login();
+  return $me['id'];
+}
+
+function get_post_request(&$_POST) {
+  $image_link = array();
+  if(isset($_POST)) {
+    foreach($_POST as $key => $value) {
+    /* preparing data' */
+      $img_obj = explode("&", $value); $img_small = $img_obj[1]; $img_big = $img_obj[0];
+      $link_small = explode("=", $img_small); $link_big= explode("=", $img_big);
+    /* preparing data' */
+
+      $link_small = $link_small[1]; 
+      $link_big = $link_big[1];
+      $image_link[$key] = array('src_small' => $link_small, 'src_big' => $link_big, 'pid' => $key);
+   }
+  }
+  else {
+    drupal_json(array('status' => FALSE, 'message' => t('Nothing here.')));
+  }
+  return $image_link;
+}
+/**
+ * JSON Save check in data.
+ */
+function checkin_save() {
+  /*
+  // If have no necessary data.
+  if (!($src_small || $src_big)) {
+    drupal_json(array('status' => FALSE, 'message' => '', 'total' => $total_objs, 'script' => 'testvar = "hello"', 'data' => $js_out));
+    return;
+  } 
+  */
+
+  $jid = uniqid(); 
+  $post_request = get_post_request(&$_POST);
+  $return_objects = array();
+
+  $start_time = time();
+
+  watchdog('starttime', $start_time);
+
+  
+  foreach ($post_request as $key => $value) {
+    $loop_start = time();
+    $image_path = _get_upload_path(). '/'.$key .'_s';
+    // Save checkin data.
+    $vars = array(
+      'fbuid' => checkin_get_fbuid(),
+      'checkin_time' => time(),
+      'image_path' => $image_path,
+      'status' => CHECKIN_STATUS_PENDING,
+      'status_updated' => time(),
+      'jid' => $jid,
+      'pid' => $key,
+    );
+    
+    $idx_opts = array('pid' => $key, 'link' => $value, ); 
+
+    $result_object = _send_to_decode_service(&$vars, $idx_opts);
+    $return_objects['data'][$key] = $result_object[$key];
+
+    watchdog('IN LOOP TO DECODE TIME '.$key, time()- $loop_start);
+
+  } // end foreach
+
+  //check_job_status($jid);  
+  watchdog('TOTAL TIME = '.$key, time() - $start_time);
+
+  header('Content-Type: application/json');
+  print drupal_json(array('jid' => $jid));
+  exit();
+}
+
+function _send_to_decode_service(&$vars, $opts) {
+  $checkin = _checkin_save($vars);
+
+  $_result = array();
+
+  // Completed.
+  if ($checkin == true) {
+    $wait_qr = time();
+    // Send image path and callback to QR service.
+    $service_url = 'http://203.151.20.185/decode/';
+    $headers = array(
+      'X-Requested-With' => 'XMLHttpRequest',
+    );
+    $data = "image_src=".$opts['link']['src_big']. "&callback=". url('checkin/qr/'. $checkin->cid .'/'. $checkin->jid, array('absolute' => TRUE));
+   
+    $result = drupal_http_request($service_url, $headers, 'POST', $data);
+    watchdog('QR-RESPONSED-TIME', time() - $wait_qr);
+    $save_img = time();
+    watchdog('SAVING--TIME = ', time() - $save_img); 
+    $server = 'http://gonorth.opendream.in.th' . _get_upload_path();
+
+    // Send data success.
+    if ($result->code == 200 && $result->data == 'OK') {
+      $_result = array($opts['pid'] => array('status' => TRUE, 'message' => t('Send data successfully.'), 'photo' => $server. $opts['pid'].'_s'));
+    }
+    // Send data failed.
+    else {
+      $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Send data failed.'), 'photo' => $server. $opts['pid'].'_s'));
+    }
+  }
+  // Failed.
+  else {
+    $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Cannot save checkin data.'), 'photo' => $server. $opts['pid'].'_s'));
+  }
+  
+  return $_result;
+ 
+}
+
+function _get_upload_path() {
+  $upload_path = file_directory_path(). '/'. variable_get('checkin_image_path_directory', CHECKIN_DEFAULT_IMAGE_PATH);
+  return $upload_path;
+}
+
+function _save_small_img($url, $pid) {
+  // TODO
+  // Save small image and get image thumbnail path.
+  $upload_path = _get_upload_path(); 
+  file_check_directory($upload_path, FILE_CREATE_DIRECTORY);
+  $image_data = drupal_http_request($url);
+  $handler = file_save_data($image_data->data, $upload_path . '/'. $pid .'_s' , FILE_EXISTS_RENAME);
+
+  return $upload_path .'/'. $pid .'_s'; 
+}
+
+/**
+ * Publish to wall().
+ */
+function checkin_publish($message, $image_path = NULL) {
+  $facebook = checkin_facebook();
+  
+  $access_token = '129673757084722|110499ce5724c2403b4b4a61-896050346|ZIan0TEe_8gTP1JsCrCYDoFcK-A';
+  
+  drupal_set_message($message);
+  drupal_set_message($image_path);
+  
+  $attachment = array(
+    'access_token', $access_token,
+    'message' => $message,
+    'picture' => $image_path,
+  );
+  
+  try {
+    $res = $facebook->api('/me/feed', 'POST', $attachment);
+    drupal_json($res);
+  } 
+  catch(Exception $ex) {
+    drupal_set_message(print_r($ex, 1));
+  }
+  
+  /*drupal_json(array('status' => TRUE, 'message' => 'Published'));
+  
+  $data = array(
+    'access_token='. $access_token,
+    'message='.$message,
+    'picture='.$image_path,
+  );
+  $data = implode('&', $data);
+  $headers = array();
+  $result = drupal_http_request('https://graph.facebook.com/me/feed', $headers, 'POST', $data);
+  drupal_set_message(print_r($result, 1));*/
+  	//drupal_json(array('status' => TRUE, 'message' => 'published'));
+}
+
+/**
+* Job handler service 
+*/
+
+function job_handler($jid) {
+ $data = array();
+ $status = check_job_status($jid);
+
+ if ($status == TRUE) {
+   $result = db_query("SELECT * FROM {checkin} where jid = '%s'", $jid);
+
+   while ($checkin_obj = db_fetch_object($result)) {
+     $node = node_load($checkin_obj->place_id);
+     if ($node) {
+       $data = array(
+         'jid' => $jid,
+         'cid' => $checkin_obj->cid,
+         'path' => $checkin_obj->image_path,
+         'pid' => $checkin_obj->image_id,
+	 'title' => $node->title,
+         //'content' => check_markup($node->body, $node->format, FALSE),
+         'content' => check_plain($node->body),
+       );
+     }
+   } // end while
+
+ } 
+
+ $return = array(
+   'status' => $status,
+   'data' => $data,
+ );
+
+ header('Content-Type: application/json');
+ print drupal_json($return);
+ exit();
+} 
+/**
+* Callback status checker 
+*/
+
+function check_job_status($jid) {
+  $status = FALSE;
+
+  $query = "SELECT count(*) as COUNTER FROM {checkin} WHERE jid = '%s' AND status = %d";
+  $result = db_result(db_query($query, $jid, CHECKIN_STATUS_PENDING)); 
+
+  if ($result == 0) {
+    $status = TRUE;
+  } 
+
+  return $status;
+}
+
+
+/**
+ * Save checkin data.
+ */
+function _checkin_save($vars) {
+  $vars = (array)$vars;
+  // Extract.
+  foreach ($vars as $key => $value) {
+    $$key = $value;
+  }
+  // Update.
+  if ($cid) {
+    if (db_query("UPDATE {checkin} SET place_id = %d, status = %d, status_updated = %d WHERE cid = %d", $place_id, $status, $status_updated, $cid)) {
+      return db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
+    }
+  }
+  // Insert.
+  else {
+    if (db_query("INSERT INTO {checkin} (jid, fbuid, checkin_time, image_path, image_id, status, status_updated) VALUES ('%s', %d, %d, '%s', '%s', %d, %d)", $jid, $fbuid, $checkin_time, $image_path, $pid, $status, $status_updated)) {
+      $cid = db_last_insert_id('checkin', 'cid');
+      return db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * QR message receiver.
+ */
+function checkin_qr($cid, $jid) {
+  $place_name = ''; 
+  $vars = array(
+    'cid' => $cid,
+    'place_id' => '0',
+    'status' => CHECKIN_STATUS_PENDING,
+    'status_updated' => time(),
+  );
+
+  watchdog('REQUEST', print_r($_REQUEST, 1));
+  if (empty($_REQUEST['data'])) {
+    $vars['status'] = CHECKIN_STATUS_ERROR;
+    watchdog('DECODE STATUS', $cid .'-'. $jid . '=--==---Not Found');
+  }
+  else {
+    $place_name = $_REQUEST['data'];
+    $vars['status'] = CHECKIN_STATUS_ERROR;
+
+    $place_id = db_result(db_query("SELECT nid FROM {node} WHERE type = 'places' AND title = '%s'", $place_name));
+    if($place_id != FALSE) {
+      $vars['status'] = CHECKIN_STATUS_OK;
+      $vars['place_id'] = $place_id;
+    }
+  } 
+  _checkin_save($vars);
+ // TODO: --- Set Header
+}

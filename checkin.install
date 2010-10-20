@@ -1,0 +1,159 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function checkin_install() {
+  drupal_install_schema('checkin');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function checkin_uninstall() {
+  drupal_uninstall_schema('checkin');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function checkin_schema() {
+  $schema['checkin'] = array(
+    'description' => 'Check in table.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'The primary checkin identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'jid' => array('description' => 'Job ID', 'type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      'fbuid' => array(
+        'description' => 'The Facebook user identifier.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => ''),
+      'place_id' => array(
+        'description' => 'The node identifier of place.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'checkin_time' => array(
+        'description' => 'The timestamp of check in time.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+      'image_path' => array(
+        'description' => 'The thumbnail image path.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'image_id' => array(
+        'description' => 'Facebook image_id',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'status' => array(
+        'description' => 'Process status.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'status_updated' => array(
+        'description' => 'The last timestamp of status has changed.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+    ),
+    'primary key' => array('cid'),
+  );
+
+/*  
+  $schema['job_data'] = array(
+    'description' => 'Identifier for each job',
+    'fields' => array(
+      'jid' => array('description' => 'Job ID', 'type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'cid' => array('description' => 'Checkin ID', 'type' => 'int', 'unsinged' => TRUE, 'not null' => TRUE),
+      'checkin_time' => array(
+        'description' => 'The timestamp of job time.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+      ),
+    'primary key' => array('jid'),
+    'unique keys' => array(
+      'job_unique' => array('jid', 'cid'),
+      )
+    );
+*/
+  $schema['fbuser_data'] = array(
+    'description' => 'Facebook user necessary data.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The user identifier.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'fbuid' => array(
+        'description' => 'The Facebook user identifier.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => ''),
+      'access_token' => array(
+        'description' => 'The access token for offline access.',
+        'type' => 'varchar', 
+        'length' => 255, 
+        'not null' => TRUE, 
+        'default' => ''),
+      'secret' => array(
+        'description' => '',
+        'type' => 'varchar', 
+        'length' => 50, 
+        'not null' => TRUE, 
+        'default' => ''),
+      'session_key' => array(
+        'description' => 'The Facebook session key of user login.',
+        'type' => 'varchar', 
+        'length' => 100, 
+        'not null' => TRUE, 
+        'default' => ''),
+      'sig' => array(
+        'description' => '',
+        'type' => 'varchar', 
+        'length' => 50, 
+        'not null' => TRUE, 
+        'default' => ''),
+    ),
+    'unique keys' => array(
+      'uid_fbuid' => array('uid', 'fbuid'),
+    ),
+    'primary key' => array('uid'),
+  );
+  /*$schema['places'] = array(
+    'description' => 'Places information.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The node identifier for place.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'pname' => array(
+        'description' => 'Place key name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+    ),
+    'unique keys' => array(
+      'place_name' => array('pname'),
+    ),
+    'primary key' => array('nid'),
+  );*/
+  return $schema;
+}

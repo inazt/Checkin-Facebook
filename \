@@ -1,0 +1,134 @@
+<?php
+
+/**
+ * Choose photos.
+ */
+function checkin_choose_photos() {
+  // Check login.
+  $me = checkin_facebook_login();
+  $apiKey = variable_get('checkin_app_api_key', ''); 
+  $output = <<<FBJS
+    <script type="text/javascript"> 
+      loading = jQuery('<img />').attr({src: 'http://together.in.th/facebox/loading.gif'});
+      Photo = {
+        Album: { 
+          getAlbums: function(owner_id) {
+            var getAlbumsFql = 'SELECT aid, object_id, name, cover_pid, size, link, visible, description, created ' + 
+                                'FROM album WHERE owner = {0}';
+            var getAlbumPhotoFql = 'SELECT aid, pid, src, src_small, src_big, link, caption FROM photo WHERE pid ' +  
+                                   'IN (SELECT cover_pid FROM album WHERE owner = {0})';
+            var albums = FB.Data.query(getAlbumsFql, owner_id);
+            var a_photos = FB.Data.query(getAlbumPhotoFql, owner_id);
+
+            return {album: albums, a_photo: a_photos};
+          },
+          getPhotos: function(aid) {
+            var getPhotosFql = 'SELECT pid, object_id, src, src_small, src_big, link, created FROM photo ' + 
+                                'WHERE aid = {0}';
+
+            var photos = FB.Data.query(getPhotosFql, aid);
+
+            return photos;
+          }
+        },
+        get: function(pid) {
+          var getPhotoFql = 'SELECT pid, src, src_small, src_big, link, created FROM photo WHERE pid = {0}';
+          var photo = FB.Data.query(getPhotoFql, pid);
+
+          return photo;
+        },
+        graph: function(object_id) {
+          return 'https://graph.facebook.com/'+object_id+'/picture?access_token='+FB._session['access_token']; 
+        }
+    }
+
+    function getAlbums() {  
+      var data = Photo.Album.getAlbums(FB.getSession().uid);
+      $('#fb-albums').append(loading);
+      FB.Data.waitOn([data.album, data.a_photo], function(args) {
+        FB.Array.forEach(data.a_photo.value , function(album) {
+          var cover = jQuery('<img />').attr({src: album.src, id: album.aid, class: 'album_cover'});
+          $('#fb-albums').append(cover);
+        })
+      loading.remove();
+      })
+    } /// getPhotos
+
+    function showAlbum(aid) {
+      var photos = Photo.Album.getPhotos(aid);  
+      var album_content = $('<div />').attr({id: 'album_content'}); 
+      $('#fb-photos').append(loading);
+      photos.wait(function(photo) {
+        FB.Array.forEach(photos.value, function(photo) {
+          var photo = jQuery('<img />').attr({src: photo.src, class: 'fb-picture', id: photo.object_id,} );
+          $(album_content).append(photo);
+        })
+        loading.remove();
+        $('#fb-photos').append(album_content);
+      })
+    }
+
+    jQuery(document).ready(function() { 
+      $('#All-Albums').hide();
+
+      $('.album_cover').live('click', function(e) {
+        console.log(this.id);
+        //$(this).parent('div').hide();
+        $('#fb-albums').hide();       
+        $('#fb-photos').show();
+        showAlbum(this.id);
+        $('#All-Albums').show('fast');
+      })
+
+      $('.fb-picture').live('click', function(e) {
+        console.log(this.id);
+        var photo = Album.Photo.get(this.id);
+        console.log(photo.value);
+        console.log(Photo.graph(this.id));
+      })
+      
+      $('#All-Albums').bind('click', function(e) { 
+	$('#All-Albums').hide();
+        $('#fb-photos').hide();
+        $('#fb-albums').show();
+        $('#album_content').remove();
+        $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
+      })
+
+    });
+    </script> 
+
+    <div id="fb-root"></div> 
+    <div id="result"></div> 
+    <div "fb-sections">
+      <div id="fb-albums"></div> 
+      <div id="fb-photos"></div>
+    </div>
+    <button id="All-Albums">All Albums</button> 
+    <script type="text/javascript"> 
+      window.fbAsyncInit = function() {
+        FB.init({ apiKey: '$apiKey', status:true, cookie: true, xfbml: true });
+        FB.getLoginStatus(function(response) {
+          if (response.session) {
+            getAlbums();
+          } 
+          else {
+            FB.Event.subscribe('auth.sessionChange', function(response) {
+              getAlbums();
+            })
+          }
+        });
+      };
+
+      (function() {
+        var e = document.createElement('script'); e.async = true;
+        e.src = document.location.protocol +
+          '//connect.facebook.net/en_US/all.js';
+        document.getElementById('fb-root').appendChild(e);
+      }());
+
+    </script> 
+FBJS;
+  
+  return $output;
+}
