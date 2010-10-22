@@ -4,6 +4,7 @@
  * Choose photos.
  */
 function checkin_choose_photos() {
+  drupal_add_css(drupal_get_path('module', 'checkin') . '/css/checkin.css');
   // Check login.
   $me = checkin_facebook_login();
   $apiKey = variable_get('checkin_app_api_key', ''); 
@@ -23,12 +24,12 @@ function checkin_choose_photos() {
       }());
 
     $(document).ready(function() { 
-      $('#All-Albums').hide();
-      $('#fb-photos').hide();
-      $('#page-title').hide();
+      $('#fb-albums').addClass('active');
+      //$('#page-title').hide();
     });
 
     window.fbAsyncInit = function() {
+        FB.Canvas.setAutoResize();
         FB.init({
           appId  : '$apiKey',
           status : true, // check login status
@@ -39,23 +40,33 @@ function checkin_choose_photos() {
 
         getAlbums();
     };
-    
-    
     </script> 
+    <ul id="tab-nav">
+      <li> 
+        <a href="#select-photos">Select Photos</a>
+      </li>
+      <li> 
+        <a href="#review-photos">Review</a>
+      </li>
+    </ul>
 
+    <div id='total-review-photos'></div> 
     
-    <div id='fb-albums'>
-      <h1>Select Albums</h1>
-    </div>
-    <div id='fb-photos'>
-      <h1>Choose Photos</h1>
-    </div>
-    <div id='All-Albums'>
-      <button>Show All Albums</button> 
+    <div id='select-photos' class='tab-el active'>
+      <ul id='fb-albums' class= 'tab-child'>
+        <h1></h1>
+      </ul>
+      <ul id='fb-photos' clas='tab-child'>
+        <div id='show-all-albums'>
+          <button>แสดงทุกอัลบัม</button> 
+        </div>
+        <h1></h1>
+      </ul>
     </div>
 
-    <div id='review-photos'></div>
+    <div id='review-photos' class='tab-el' >
       <button id='send-photo'>Send!</button>
+    </div>
     <div id='server-result'></div>
 
 FBJS;
