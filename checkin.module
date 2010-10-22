@@ -80,6 +80,14 @@ function checkin_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'checkin.pages.inc',
   );
+  $items['checkin/apps'] = array(
+    'title' => t('Choose photos'),
+    'description' => t('Choose photos to check in'),
+    'page callback' => 'checkin_apps',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'checkin.pages.inc',
+  );
   $items['test'] = array(
     'title' => t('Test'),
     'page callback' => 'checkin_test',
