@@ -364,7 +364,7 @@ function checkin_save() {
   
   foreach ($post_request as $key => $value) {
     $loop_start = time();
-    $image_path = _get_upload_path(). '/'.$key .'_s';
+    $image_path = '/'. _get_upload_path(). '/'.$key .'_s';
     // Save checkin data.
     $vars = array(
       'fbuid' => checkin_get_fbuid(),
