@@ -29,7 +29,6 @@ function checkin_choose_photos() {
     });
 
     window.fbAsyncInit = function() {
-        FB.Canvas.setAutoResize();
         FB.init({
           appId  : '$apiKey',
           status : true, // check login status
@@ -39,6 +38,7 @@ function checkin_choose_photos() {
         });
 
         getAlbums();
+        FB.Canvas.setAutoResize();
     };
     </script> 
     <ul id="tab-nav">
@@ -67,7 +67,7 @@ function checkin_choose_photos() {
     <div id='review-photos' class='tab-el' >
       <button id='send-photo'>Send!</button>
     </div>
-    <div id='server-result'></div>
+    <div id='server-result' class='tab-el'></div>
 
 FBJS;
   
