@@ -16,7 +16,7 @@
         var getAlbumsFql = 'SELECT aid, object_id, name, cover_pid, size, link, visible, description, created, modified ' + 
                            'FROM album WHERE owner = {0}';
         var getAlbumPhotoFql = 'SELECT aid, pid, src, src_small, src_big, link, caption FROM photo WHERE pid ' +  
-                               'IN (SELECT cover_pid FROM album WHERE owner = {0})';
+                               'IN (SELECT cover_pid FROM album WHERE owner = {0}) ORDER BY modified DESC';
         var albums = FB.Data.query(getAlbumsFql, owner_id);
 
         //a_photos = album_photos
