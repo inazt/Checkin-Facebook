@@ -1,5 +1,5 @@
 #fb-photos {
-  /*width: 600px;*/
+  width: 600px;
   min-height: 150px;
   float: left;
 }
@@ -83,8 +83,10 @@ margin:0;padding:0;
 
 #review-photos {
   float: left;
-  width: 144px;
   min-height: 150px;
+}
+#review-photos img {
+  padding: 10px;
 }
 
 #tab-nav li {
