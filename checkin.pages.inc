@@ -37,8 +37,8 @@ function checkin_choose_photos() {
           xfbml  : true  // parse XFBML
         });
 
-        getAlbums();
         FB.Canvas.setAutoResize();
+        getAlbums();
     };
     </script> 
     <ul id="tab-nav">
