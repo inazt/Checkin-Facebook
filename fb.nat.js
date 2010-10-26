@@ -53,28 +53,28 @@ function repaint() {
 }
 function job_status() {
   service_path = "/checkin/qr/job/" + current_jid + "/status";
-  $.getJSON(service_path, {}, function (data) {
-    if (data.status == true) {
-      var output = '<ul>';
-      $(data.data).each(function (i, item) {
-        console.log(i, item);
-        var pub = div.clone().html('Publish').addClass('publish-button');
-        var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
-        var div_section = div.clone().addClass('review-item').append(img_section).append(pub);
-        $('#server-result').addClass('active').append(div_section);
-
-        output += '\
-        <li> \
-          <img src="' + item.path + '" />\
-            <h2>' + item.title + '</h2>\
-            <p>' + item.content + '</p>\
-        </li> \
-       ';
-     });
-     output += '</ul>';
-     //$('body').append($(output));
-     clearInterval(check_job_timer);
-    } //end if
+  $.getJSON(service_path, {}, function (server_data) {
+    $.each(server_data, function(k, data) {
+      //if (data.status == true) {
+        var output = '<ul>';
+        $(data.data).each(function (i, item) {
+          var pub = div.clone().html('Publish').addClass('publish-button');
+          var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
+          var div_section = div.clone().addClass('server-item').append(img_section).append(pub);
+          $('#server-result').addClass('active').append(div_section);
+          output += '\
+          <li> \
+            <img src="' + item.path + '" />\
+              <h2>' + item.title + '</h2>\
+              <p>' + item.content + '</p>\
+          </li> \
+          ';
+        }); // end each
+        output += '</ul>';
+        //$('body').append($(output));
+        clearInterval(check_job_timer);
+      //} //end if
+    }) //end each
   }); //end getJson
 }
 
