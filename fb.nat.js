@@ -161,8 +161,8 @@ $('.fb-picture-div').live('click', function(e) {
     var img_section = img.clone().attr({src: self.src}); 
     var pid = photo[0].pid;
     if(review_photos[pid] == undefined) {
-      review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.src;
-      var picture = img.clone().attr({src: self.attr('src'), id: pid } ).addClass('fb-photo-review');
+      review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.get(0).src;
+      var picture = img.clone().attr({src: self_photo.attr('src'), id: pid } ).addClass('fb-photo-review');
       $('#send-photo').before(picture);
     }
     else {
