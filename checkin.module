@@ -357,6 +357,9 @@ function checkin_save() {
   $post_request = get_post_request(&$_POST);
   $return_objects = array();
 
+  header('Content-Type: application/json');
+  print drupal_json(array('jid' => $jid));
+
   $start_time = time();
 
   watchdog('starttime', $start_time);
@@ -506,24 +509,25 @@ function job_handler($jid) {
          'cid' => $checkin_obj->cid,
          'path' => $checkin_obj->image_path,
          'pid' => $checkin_obj->image_id,
-	 'title' => $node->title,
+         'title' => $node->title,
          //'content' => check_markup($node->body, $node->format, FALSE),
          'content' => check_plain($node->body),
+       );
+       $return[] = array(
+         'status' => $status,
+         'data' => $data,
        );
      }
    } // end while
 
  } 
 
- $return = array(
-   'status' => $status,
-   'data' => $data,
- );
 
  header('Content-Type: application/json');
  print drupal_json($return);
  exit();
 } 
+
 /**
 * Callback status checker 
 */
