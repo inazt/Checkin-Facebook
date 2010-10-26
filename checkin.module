@@ -505,6 +505,7 @@ function job_handler($jid) {
 
  if ($status == TRUE) {
    $result = db_query("SELECT * FROM {checkin} where jid = '%s'", $jid);
+   $return = array();
 
    while ($checkin_obj = db_fetch_object($result)) {
      $node = node_load($checkin_obj->place_id);
