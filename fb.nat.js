@@ -103,7 +103,7 @@ function getAlbums() {
     })
   loading.remove();
   })
-  FB.Canvas.setSize();
+  //FB.Canvas.setSize();
 } /// getPhotos
 
 /***  Show All Photos In Album ***/
@@ -152,7 +152,7 @@ function update_review_photo(operand) {
 $('.fb-picture-div').live('click', function(e) {
   var self = $(this);
   self= self.children('img')  
-
+  var self_photo = self;
   var photos = Photo.get($(self).attr('pid'));
 
   self.parent('div').toggleClass('hover');
@@ -192,7 +192,7 @@ $('.fb-picture').live('click', function(e) {
       update_review_photo();
   }) //end wait
 })
- 
+*/ 
 function remove_review_photo(pid) {
   delete(review_photos[pid]);
   var selector = '#review-photos img#' +pid
@@ -214,7 +214,6 @@ $('.fb-photo-review').live('click', function(e) {
   var rid = self.attr('id');
   delete(review_photos[rid]);
   self.remove(); 
-
   update_review_photo();
   //$('#tab-nav li a[href="#fb-photos"]').click();
 })
@@ -222,12 +221,13 @@ $('.fb-photo-review').live('click', function(e) {
 $('#tab-nav li a').live('click', function(e) {
   var self = $(this);
   var current_id = self.attr('href');
-
   $(current_id).addClass('active');
+  FB.Canvas.setSize({height: 500});
   e.preventDefault();
 })
 
 $('.publish-button').live('click', function(e) {
+  FB.Canvas.setSize({height: 500});
   var self = $(this);
   var img = $(self.siblings('img'));
   var img_id = img.attr('pid');
@@ -262,7 +262,7 @@ $('.publish-button').live('click', function(e) {
     $('#server-result').append(waiting);
     $('#fb-photos').hide();
     $('#fb-albums').hide();
-    $('#review-photos').hide();
+    $('#review-photos').removeClass('active');
     $('#server-result').addClass('active');
     $.post('/checkin/save', review_photos, function(resp) {
       resp = JSON.parse(resp);
