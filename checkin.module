@@ -362,9 +362,6 @@ function checkin_save() {
 
   $start_time = time();
 
-  watchdog('starttime', $start_time);
-
-  
   foreach ($post_request as $key => $value) {
     $loop_start = time();
     $image_path = '/'. _get_upload_path(). '/'.$key .'_s';
@@ -391,9 +388,6 @@ function checkin_save() {
   //check_job_status($jid);  
   watchdog('TOTAL TIME = '.$key, time() - $start_time);
 
-  header('Content-Type: application/json');
-  print drupal_json(array('jid' => $jid));
-  exit();
 }
 
 function _send_to_decode_service(&$vars, $opts) {
@@ -405,8 +399,6 @@ function _send_to_decode_service(&$vars, $opts) {
   if ($checkin == true) {
     $wait_qr = time();
     // Send image path and callback to QR service.
-    watchdog('savePath', print_r($checkin, 1));
-    watchdog('savePath2', print_r($opts, 1));
     $pid = $opts['pid'];
     $fb_link_s = $opts['link']['src_small'];
     $service_url = 'http://203.151.20.185/decode/';
@@ -452,7 +444,6 @@ function _save_small_img($url, $pid) {
   file_check_directory($upload_path, FILE_CREATE_DIRECTORY);
   $image_data = drupal_http_request($url);
   $handler = file_save_data($image_data->data, $upload_path . '/'. $pid .'_s' , FILE_EXISTS_RENAME);
-
   return $upload_path .'/'. $pid .'_s'; 
 }
 
@@ -594,6 +585,7 @@ function checkin_qr($cid, $jid) {
   );
 
   watchdog('REQUEST', print_r($_REQUEST, 1));
+
   if (empty($_REQUEST['data'])) {
     $vars['status'] = CHECKIN_STATUS_ERROR;
     watchdog('DECODE STATUS', $cid .'-'. $jid . '=--==---Not Found');
