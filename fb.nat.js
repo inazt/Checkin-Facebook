@@ -45,6 +45,12 @@
     }
 }
 
+function repaint() {
+    $.each(review_photos, function(k, v) {
+      var selector = "img[pid|='" +k + "']";
+      $(selector).parent('div').addClass('hover');
+    });
+}
 function job_status() {
   service_path = "/checkin/qr/job/" + current_jid + "/status";
   $.getJSON(service_path, {}, function (data) {
@@ -118,9 +124,13 @@ function showAlbum(aid) {
     })
     loading.remove();
     $('#fb-photos h1').after(album_content);
+
+    if ( $('div .hover').size() == 0 ) {
+      repaint();
+    }
+    $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
+    FB.Canvas.setSize();
   })
-  $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
-  FB.Canvas.setSize();
 } //end showAllbum(id)
 
 
