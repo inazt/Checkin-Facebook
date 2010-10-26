@@ -141,12 +141,37 @@ $('li.fb-album').live('click', function(e) {
   //$('#tab-nav li a[href="#fb-photos"]').click();
   $('#fb-albums').hide();
   $('#fb-photos').show();
+  FB.Canvas.setSize({height: 0});
   showAlbum(curr_img.attr('id'));
 })
 function update_review_photo(operand) {
   operand = 1;
   $('#tab-nav li a[href="#review-photos"]').html('Review ('+ $("#review-photos img").size()+')');
 }
+
+$('.fb-picture-div').live('click', function(e) {
+  var self = $(this);
+  self= self.children('img')  
+
+  var photos = Photo.get($(self).attr('pid'));
+
+  self.parent('div').toggleClass('hover');
+
+  photos.wait(function(photo) {
+    var img_section = img.clone().attr({src: self.src}); 
+    var pid = photo[0].pid;
+    if(review_photos[pid] == undefined) {
+      review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.src;
+      var picture = img.clone().attr({src: self.attr('src'), id: pid } ).addClass('fb-photo-review');
+      $('#send-photo').before(picture);
+    }
+    else {
+      remove_review_photo(pid);
+    }
+      update_review_photo();
+  }) //end wait
+})
+/*
 $('.fb-picture').live('click', function(e) {
   var photos = Photo.get($(this).attr('pid'));
   var self = $(this);
