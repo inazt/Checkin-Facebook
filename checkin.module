@@ -405,6 +405,10 @@ function _send_to_decode_service(&$vars, $opts) {
   if ($checkin == true) {
     $wait_qr = time();
     // Send image path and callback to QR service.
+    watchdog('savePath', print_r($checkin, 1));
+    watchdog('savePath2', print_r($opts, 1));
+    $pid = $opts['pid'];
+    $fb_link_s = $opts['link']['src_small'];
     $service_url = 'http://203.151.20.185/decode/';
     $headers = array(
       'X-Requested-With' => 'XMLHttpRequest',
@@ -414,6 +418,7 @@ function _send_to_decode_service(&$vars, $opts) {
     $result = drupal_http_request($service_url, $headers, 'POST', $data);
     watchdog('QR-RESPONSED-TIME', time() - $wait_qr);
     $save_img = time();
+    _save_small_img($fb_link_s, $pid);
     watchdog('SAVING--TIME = ', time() - $save_img); 
     $server = 'http://gonorth.opendream.in.th' . _get_upload_path();
 
