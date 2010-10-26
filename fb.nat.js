@@ -55,7 +55,7 @@ function job_status() {
         var pub = div.clone().html('Publish').addClass('publish-button');
         var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
         var div_section = div.clone().addClass('review-item').append(img_section).append(pub);
-        $('#server-result').append(div_section);
+        $('#server-result').addClass('active').append(div_section);
 
         output += '\
         <li> \
@@ -97,6 +97,7 @@ function getAlbums() {
     })
   loading.remove();
   })
+  FB.Canvas.setSize();
 } /// getPhotos
 
 /***  Show All Photos In Album ***/
@@ -118,6 +119,8 @@ function showAlbum(aid) {
     loading.remove();
     $('#fb-photos h1').after(album_content);
   })
+  $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
+  FB.Canvas.setSize();
 } //end showAllbum(id)
 
 
@@ -130,34 +133,34 @@ $('li.fb-album').live('click', function(e) {
   $('#fb-photos').show();
   showAlbum(curr_img.attr('id'));
 })
-function update_review_photo() {
-  $('#tab-nav li a[href="#review-photos"]').html('Review ('+ $("#review-photos img").size() + ')');
+function update_review_photo(operand) {
+  operand = 1;
+  $('#tab-nav li a[href="#review-photos"]').html('Review ('+ $("#review-photos img").size()+')');
 }
 $('.fb-picture').live('click', function(e) {
   var photos = Photo.get($(this).attr('pid'));
   var self = $(this);
 
   self.parent('div').toggleClass('hover');
+
   photos.wait(function(photo) {
     var img_section = img.clone().attr({src: self.src}); 
     var pid = photo[0].pid;
     if(review_photos[pid] == undefined) {
       review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.src;
       var picture = img.clone().attr({src: self.attr('src'), id: pid } ).addClass('fb-photo-review');
-      $('#review-photos').append(picture);
-      update_review_photo();
+      $('#send-photo').before(picture);
     }
     else {
       remove_review_photo(pid);
     }
-     update_review_photo();
-  })
+      update_review_photo();
+  }) //end wait
 })
  
 function remove_review_photo(pid) {
   delete(review_photos[pid]);
-  var selector = '#review-photos img#'+pid
-  console.log(selector);
+  var selector = '#review-photos img#' +pid
   $(selector).remove()
 }
 $('#show-all-albums').live('click', function(e) { 
@@ -225,6 +228,7 @@ $('.publish-button').live('click', function(e) {
     $('#fb-photos').hide();
     $('#fb-albums').hide();
     $('#review-photos').hide();
+    $('#server-result').addClass('active');
     $.post('/checkin/save', review_photos, function(resp) {
       resp = JSON.parse(resp);
       current_jid = resp.jid;
