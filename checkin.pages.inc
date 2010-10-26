@@ -56,7 +56,7 @@ function checkin_choose_photos() {
       <ul id='fb-albums' class= 'tab-child'>
         <h1></h1>
       </ul>
-      <ul id='fb-photos' clas='tab-child'>
+      <ul id='fb-photos' class='tab-child'>
         <div id='show-all-albums'>
           <button>แสดงทุกอัลบัม</button> 
         </div>
