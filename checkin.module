@@ -506,24 +506,28 @@ function job_handler($jid) {
  if ($status == TRUE) {
    $result = db_query("SELECT * FROM {checkin} where jid = '%s'", $jid);
    $return = array();
-
    while ($checkin_obj = db_fetch_object($result)) {
+     $data = array(
+       'jid' => $jid,
+       'cid' => $checkin_obj->cid,
+       'path' => $checkin_obj->image_path,
+       'pid' => $checkin_obj->image_id,
+       'title' => '',
+       'content' => '',
+     );
      $node = node_load($checkin_obj->place_id);
      if ($node) {
-       $data = array(
-         'jid' => $jid,
-         'cid' => $checkin_obj->cid,
-         'path' => $checkin_obj->image_path,
-         'pid' => $checkin_obj->image_id,
-         'title' => $node->title,
-         //'content' => check_markup($node->body, $node->format, FALSE),
-         'content' => check_plain($node->body),
-       );
-       $return[] = array(
-         'status' => $status,
-         'data' => $data,
-       );
+       $data['content'] = check_plain($node->body); 
+       $data['title'] = check_plain($node->title); 
      }
+     else { // can't decode  
+       $data['content'] = 'null'; 
+       $data['title'] = 'null'; 
+     }
+     $return[] = array(
+       'status' => $status,
+       'data' => $data,
+     );
    } // end while
 
  } 
