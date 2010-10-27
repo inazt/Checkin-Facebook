@@ -95,11 +95,22 @@ margin:0;padding:0;
   padding: 10px;
 }
 
+#review-photos img {
+  cursor: pointer;
+}
 
 .tab-el {
   display: none; 
 }
 
+.tab-child {
+  display: none;
+}
+
 .active {
   display: block;
+}
+
+#tab-nav li a {
+  cursor: default;
 }

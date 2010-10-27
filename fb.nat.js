@@ -43,14 +43,16 @@
 
       return 'https://graph.facebook.com/'+object_id+'/picture?access_token='+FB._session['access_token']; 
     }
-}
+  }
 
 function repaint() {
-    $.each(review_photos, function(k, v) {
-      var selector = "img[pid|='" +k + "']";
-      $(selector).parent('div').addClass('hover');
-    });
+  $('.fb-picture-div').removeClass('hover');  
+  $.each(review_photos, function(k, v) {
+    var selector = "img[pid|='" +k + "']";
+    $(selector).parent('div').addClass('hover');
+  });
 }
+
 function job_status() {
   service_path = "/checkin/qr/job/" + current_jid + "/status";
   $.getJSON(service_path, {}, function (server_data) {
@@ -59,9 +61,12 @@ function job_status() {
         var output = '<ul>';
         $(data.data).each(function (i, item) {
           var pub = div.clone().html('Publish').addClass('publish-button');
+          if (item.title == 'null') {
+            pub.html('Decode failed');
+          }
           var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
           var div_section = div.clone().addClass('server-item').append(img_section).append(pub);
-          $('#server-result').addClass('active').append(div_section);
+          $('#server-result').show().append(div_section);
           output += '\
           <li> \
             <img src="' + item.path + '" />\
@@ -69,9 +74,12 @@ function job_status() {
               <p>' + item.content + '</p>\
           </li> \
           ';
+          
         }); // end each
         output += '</ul>';
-        //$('body').append($(output));
+        /*     
+        $('body').append($(output));
+        */
         clearInterval(check_job_timer);
       //} //end if
     }) //end each
@@ -93,7 +101,6 @@ function getAlbums() {
       var detail = album_detail[aid];
       var div_section = li.clone().addClass('fb-album'); 
       var img_section = div.clone().addClass('fb-thumb').append(img.clone().attr({src: album.src, id: album.aid, class: 'album_cover', aid: aid}));
-      //var img_section = span.clone().css({display: 'block', 'background-image': 'url("' +album.src+'")', width: '164px', height: '120px', 'background-repeat': 'no-repeat', 'background-position': 'center 25%', 'background-color': '#EEE'})
       var cover_section = div_section.append(img_section);
 
       var div_detail = 	div.clone().addClass('fb-album-detail').append(h3.clone().html(detail.name));
@@ -123,7 +130,7 @@ function showAlbum(aid) {
       $(album_content).append(div_img);
     })
     loading.remove();
-    $('#fb-photos h1').after(album_content);
+    $('#album-photos').after(album_content);
 
     if ( $('div .hover').size() == 0 ) {
       repaint();
@@ -133,21 +140,55 @@ function showAlbum(aid) {
   })
 } //end showAllbum(id)
 
+function update_review_photo(operand) {
+  operand = 1;
+  $('#total-review-photos').html(' ('+ $("#review-photos img").size()+' รูป)');
+}
+
+function remove_review_photo(pid) {
+  delete(review_photos[pid]);
+  var selector = '#review-photos img#' +pid
+  $(selector).remove()
+}
+
+ 
+$('#show-all-albums').live('click', function(e) { 
+/*  $('#All-Albums').addClass('hidden');
+  $('#fb-photos').addClass('hidden');
+  $('#fb-albums').show();
+*/
+  console.log('show-all');
+  $('#li-show-all-albums').hide();
+  $('#fb-photos').hide();
+  $('#fb-albums').show(); 
+  $('#album_content').remove();
+  $('#review-photos').hide();
+  $('#select-photos').show();
+  $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
+})
+
+$('#tab-nav li a').live('click', function(e) {
+  var self = $(this);
+  var current_id = self.attr('href');
+  $(current_id).show();
+  FB.Canvas.setSize({height: 500});
+  e.preventDefault();
+})
+
+
 
 // Click for choose album
 $('li.fb-album').live('click', function(e) {
   var self = $(this);
   var curr_img = (self.children('.fb-thumb').children('img'));
   //$('#tab-nav li a[href="#fb-photos"]').click();
+  $('#li-show-all-albums').show();
   $('#fb-albums').hide();
   $('#fb-photos').show();
   FB.Canvas.setSize({height: 0});
+  
   showAlbum(curr_img.attr('id'));
 })
-function update_review_photo(operand) {
-  operand = 1;
-  $('#tab-nav li a[href="#review-photos"]').html('Review ('+ $("#review-photos img").size()+')');
-}
 
 $('.fb-picture-div').live('click', function(e) {
   var self = $(this);
@@ -163,7 +204,8 @@ $('.fb-picture-div').live('click', function(e) {
     if(review_photos[pid] == undefined) {
       review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.get(0).src;
       var picture = img.clone().attr({src: self_photo.attr('src'), id: pid } ).addClass('fb-photo-review');
-      $('#send-photo').before(picture);
+      var pic_containner = div.clone().append(picture);
+      $('#send-photo').before(pic_containner);
     }
     else {
       remove_review_photo(pid);
@@ -171,43 +213,7 @@ $('.fb-picture-div').live('click', function(e) {
       update_review_photo();
   }) //end wait
 })
-/*
-$('.fb-picture').live('click', function(e) {
-  var photos = Photo.get($(this).attr('pid'));
-  var self = $(this);
 
-  self.parent('div').toggleClass('hover');
-
-  photos.wait(function(photo) {
-    var img_section = img.clone().attr({src: self.src}); 
-    var pid = photo[0].pid;
-    if(review_photos[pid] == undefined) {
-      review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.src;
-      var picture = img.clone().attr({src: self.attr('src'), id: pid } ).addClass('fb-photo-review');
-      $('#send-photo').before(picture);
-    }
-    else {
-      remove_review_photo(pid);
-    }
-      update_review_photo();
-  }) //end wait
-})
-*/ 
-function remove_review_photo(pid) {
-  delete(review_photos[pid]);
-  var selector = '#review-photos img#' +pid
-  $(selector).remove()
-}
-$('#show-all-albums').live('click', function(e) { 
-/*  $('#All-Albums').addClass('hidden');
-  $('#fb-photos').addClass('hidden');
-  $('#fb-albums').show();
-*/
-  $('#fb-photos').hide();
-  $('#fb-albums').show(); 
-  $('#album_content').remove();
-  $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
-})
 
 $('.fb-photo-review').live('click', function(e) {
   var self = $(this);
@@ -218,13 +224,6 @@ $('.fb-photo-review').live('click', function(e) {
   //$('#tab-nav li a[href="#fb-photos"]').click();
 })
 
-$('#tab-nav li a').live('click', function(e) {
-  var self = $(this);
-  var current_id = self.attr('href');
-  $(current_id).addClass('active');
-  FB.Canvas.setSize({height: 500});
-  e.preventDefault();
-})
 
 $('.publish-button').live('click', function(e) {
   FB.Canvas.setSize({height: 500});
@@ -253,8 +252,9 @@ $('.publish-button').live('click', function(e) {
   $('#tab-nav li a').live('click', function(e) {
     console.log(this);
     var self = $(this);
-    $('.tab-el').removeClass('active');
-    $(self.attr('href')).addClass('active');
+    $('.tab-el').hide()
+    $(self.attr('href')).show()
+    repaint();
   })
 
   $('#send-photo').live('click', function(e) {
@@ -262,8 +262,8 @@ $('.publish-button').live('click', function(e) {
     $('#server-result').append(waiting);
     $('#fb-photos').hide();
     $('#fb-albums').hide();
-    $('#review-photos').removeClass('active');
-    $('#server-result').addClass('active');
+    $('#review-photos').hide()
+    $('#server-result').show()
     $.post('/checkin/save', review_photos, function(resp) {
       resp = JSON.parse(resp);
       current_jid = resp.jid;

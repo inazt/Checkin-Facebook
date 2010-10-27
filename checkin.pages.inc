@@ -25,6 +25,7 @@ function checkin_choose_photos() {
 
     $(document).ready(function() { 
       $('#fb-albums').addClass('active');
+      $('#li-show-all-albums').hide();  
       //$('#page-title').hide();
     });
 
@@ -42,28 +43,23 @@ function checkin_choose_photos() {
     };
     </script> 
     <ul id="tab-nav">
-      <li> 
-        <a href="#select-photos">Select Photos</a>
+      <li id='li-show-all-albums'> 
+        <a id="show-all-albums" >แสดงอัลบัมทั้งหมด</a>
       </li>
       <li> 
-        <a href="#review-photos">Review</a>
+        <a href='#review-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></a>
       </li>
     </ul>
-
-    <div id='total-review-photos'></div> 
-    
+    <div style='clear:left'></div> 
     <div id='select-photos' class='tab-el active'>
-      <ul id='fb-albums' class= 'tab-child'>
-        <h1></h1>
-      </ul>
-      <ul id='fb-photos' class='tab-child'>
-        <div id='show-all-albums'>
-          <button>แสดงทุกอัลบัม</button> 
-        </div>
-        <h1></h1>
-      </ul>
+      <div id='fb-albums' class= 'tab-child'>
+        <h3>เลือกอัลบัม</h3>
+      </div>
+      <div id='fb-photos' class='tab-child'>
+        <div id='album-photos'></div>
+      </div>
     </div>
-
+ 
     <div id='review-photos' class='tab-el' >
       <button id='send-photo'>Send!</button>
     </div>
