@@ -5,6 +5,7 @@
  */
 function checkin_choose_photos() {
   drupal_add_css(drupal_get_path('module', 'checkin') . '/css/checkin.css');
+  drupal_add_js(array('checkin' =>  array('path' => '/'.drupal_get_path('module', 'checkin'))), 'setting');
   // Check login.
   $me = checkin_facebook_login();
   $apiKey = variable_get('checkin_app_api_key', ''); 
@@ -24,8 +25,12 @@ function checkin_choose_photos() {
       }());
 
     $(document).ready(function() { 
+      loading = img.clone().attr({src: Drupal.settings.checkin.path +'/images/loading.gif'});
       $('#fb-albums').addClass('active');
       $('#li-show-all-albums').hide();  
+      $('.second-page-item').hide();
+      $('.li-show-all-albums').hide();
+      update_review_photo();
       //$('#page-title').hide();
     });
 
@@ -42,29 +47,47 @@ function checkin_choose_photos() {
         getAlbums();
     };
     </script> 
-    <ul id="tab-nav">
-      <li id='li-show-all-albums'> 
-        <a id="show-all-albums" >แสดงอัลบัมทั้งหมด</a>
+    <p class='every-page-item selected-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></p>
+    <ul class="tab-nav">
+      <li class='li-show-all-albums second-page-item'> 
+        <button class="show-all-albums" >กลับไปอัลบั้ม</button>
       </li>
-      <li> 
-        <a href='#review-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></a>
+      <li>
+        <button class="second-page-item go-review-button">ขั้นตอนต่อไป</button>
       </li>
-    </ul>
+      <li>
+        <button class="go-checkin">เช็คอิน</button>
+      </li>          
+    </ul>  
     <div style='clear:left'></div> 
     <div id='select-photos' class='tab-el active'>
       <div id='fb-albums' class= 'tab-child'>
-        <h3>เลือกอัลบัม</h3>
+        <h3 class='first-page-item choose-album'>เลือกอัลบัม</h3>
+        <div id='album_content'></div>
       </div>
       <div id='fb-photos' class='tab-child'>
+        <h3 class='choose-photo'>เลือกรูป</h3>
         <div id='album-photos'></div>
-      </div>
+      </div> 
     </div>
  
     <div id='review-photos' class='tab-el' >
-      <button id='send-photo'>Send!</button>
+      <h3 class='review-photo-for-send'>รูปทั้งหมดที่ต้องการส่ง</h3>
     </div>
+    
     <div id='server-result' class='tab-el'></div>
 
+    <ul class="tab-nav">
+      <li class='li-show-all-albums second-page-item'> 
+        <button class="show-all-albums" >กลับไปอัลบั้ม</button>
+      </li>
+      <li>
+        <button class="second-page-item go-review-button">ขั้นตอนต่อไป</button>
+      </li>
+      <li>
+        <button class="go-checkin">เช็คอิน</button>
+      </li>          
+    </ul>   
 FBJS;
   
   return $output;

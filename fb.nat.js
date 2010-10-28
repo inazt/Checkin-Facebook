@@ -1,4 +1,4 @@
-  var current_jid, check_job_timer;
+  var current_jid, check_job_timer, current_state;
   var review_photos = { } 
   var album_detail = { }
   var div = $('<div />');
@@ -8,7 +8,7 @@
   var li = $('<li />');
   var h3 = $('<h3 />');
   var span = $('<span />');
-  var loading = img.clone().attr({src: 'http://together.in.th/facebox/loading.gif'});
+  var loading ;
 
   Photo = {
     Album: { 
@@ -66,6 +66,8 @@ function job_status() {
           }
           var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
           var div_section = div.clone().addClass('server-item').append(img_section).append(pub);
+          var div_info = div.clone().addClass('place-info').html(item.title + ':' +item.content);
+          div_section.append(div_info);
           $('#server-result').show().append(div_section);
           output += '\
           <li> \
@@ -74,7 +76,6 @@ function job_status() {
               <p>' + item.content + '</p>\
           </li> \
           ';
-          
         }); // end each
         output += '</ul>';
         /*     
@@ -116,22 +117,22 @@ function getAlbums() {
 /***  Show All Photos In Album ***/
 function showAlbum(aid) {
   var photos = Photo.Album.getPhotos(aid);  
-  var album_content = div.clone().attr({id: 'album_content'}); 
+  var album_content = $('#album_content');
   var div_img ;
   var album_name = album_detail[aid].name;
-
-  album_content.append(h3.clone().html(album_name));
+  
+  //album_content.append(h3.clone().html(album_name).addClass('album-name'));
+  $('.album_name').html(album_name);
   $('#fb-photos').append(loading);
   photos.wait(function(photo) {
     FB.Array.forEach(photos.value, function(photo) {
       var photo = img.clone().addClass('fb-picture').attr({src: photo.src, object_id: photo.object_id, pid: photo.pid, alt: photo.caption});
       div_img = div.clone().addClass('fb-picture-div');
       div_img.append(photo);
-      $(album_content).append(div_img);
+      album_content.append(div_img);
     })
     loading.remove();
-    $('#album-photos').after(album_content);
-
+    $('#album-photos').append(album_content);
     if ( $('div .hover').size() == 0 ) {
       repaint();
     }
@@ -142,39 +143,34 @@ function showAlbum(aid) {
 
 function update_review_photo(operand) {
   operand = 1;
-  $('#total-review-photos').html(' ('+ $("#review-photos img").size()+' รูป)');
+  $('#total-review-photos').html(' ('+ $("#review-photos img.fb-photo-review").size()+' รูป)');
 }
 
-function remove_review_photo(pid) {
+function remove_review_photo(pid) { 
   delete(review_photos[pid]);
   var selector = '#review-photos img#' +pid
-  $(selector).remove()
+  $(selector).parent('div').hide('slow', function() { $(this).remove() })
 }
 
  
-$('#show-all-albums').live('click', function(e) { 
-/*  $('#All-Albums').addClass('hidden');
-  $('#fb-photos').addClass('hidden');
-  $('#fb-albums').show();
-*/
-  console.log('show-all');
+$('.li-show-all-albums').live('click', function(e) { 
   $('#li-show-all-albums').hide();
+  $('.second-page-item').hide();
   $('#fb-photos').hide();
-  $('#fb-albums').show(); 
-  $('#album_content').remove();
+  $('#fb-albums').show();
+  $('#album_content').html('');
+  //$('#album_content div.fb-picture-div').remove()
   $('#review-photos').hide();
   $('#select-photos').show();
   $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
 })
 
-$('#tab-nav li a').live('click', function(e) {
-  var self = $(this);
-  var current_id = self.attr('href');
-  $(current_id).show();
-  FB.Canvas.setSize({height: 500});
-  e.preventDefault();
-})
+$('.go-review-button').live('click', function(e) {
+  $('#review-photos').show();
+  $('#fb-photos').hide();
+  $('fb-albums').hide();
 
+})
 
 
 // Click for choose album
@@ -185,12 +181,15 @@ $('li.fb-album').live('click', function(e) {
   $('#li-show-all-albums').show();
   $('#fb-albums').hide();
   $('#fb-photos').show();
+   
+  $('.second-page-item').show();
   FB.Canvas.setSize({height: 0});
   
   showAlbum(curr_img.attr('id'));
 })
 
 $('.fb-picture-div').live('click', function(e) {
+  //console.log('i do');
   var self = $(this);
   self= self.children('img')  
   var self_photo = self;
@@ -204,8 +203,9 @@ $('.fb-picture-div').live('click', function(e) {
     if(review_photos[pid] == undefined) {
       review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.get(0).src;
       var picture = img.clone().attr({src: self_photo.attr('src'), id: pid } ).addClass('fb-photo-review');
-      var pic_containner = div.clone().append(picture);
-      $('#send-photo').before(pic_containner);
+      var pic_containner = div.clone().addClass('review-photo').append(picture).append(img.clone().addClass('delete').attr({src: Drupal.settings.checkin.path +'/images/delete.png'}));
+      
+      $('#review-photos').append(pic_containner);
     }
     else {
       remove_review_photo(pid);
@@ -214,16 +214,13 @@ $('.fb-picture-div').live('click', function(e) {
   }) //end wait
 })
 
-
-$('.fb-photo-review').live('click', function(e) {
+$('.delete').live('click', function(e) {
   var self = $(this);
-  var rid = self.attr('id');
-  delete(review_photos[rid]);
-  self.remove(); 
-  update_review_photo();
-  //$('#tab-nav li a[href="#fb-photos"]').click();
-})
+  var rid = self.siblings('img').attr('id');
+  remove_review_photo(rid);
+  update_review_photo();  
 
+}) 
 
 $('.publish-button').live('click', function(e) {
   FB.Canvas.setSize({height: 500});
@@ -233,9 +230,6 @@ $('.publish-button').live('click', function(e) {
   var img_info = img.attr('info');
   var img_title = img.attr('title');
   var img_src = window.location.protocol + '//' + location.host+'/'+img.attr('src');
-  console.log('img_src =', img_src);
-  console.log('img_info', img_info);
-  console.log(img);
 
   var publish = getUIOption(img_src, img_info, img_title); 
   FB.ui(publish, function(response) {
@@ -248,29 +242,20 @@ $('.publish-button').live('click', function(e) {
      }
  }) // FB.ui 
 }) // pubish.click 
-
-  $('#tab-nav li a').live('click', function(e) {
-    console.log(this);
-    var self = $(this);
-    $('.tab-el').hide()
-    $(self.attr('href')).show()
-    repaint();
+$('.go-checkin').live('click', function(e) {
+  var waiting = loading.clone();
+  $('#server-result').append(waiting);
+  $('#fb-photos').hide();
+  $('#fb-albums').hide();
+  $('#review-photos').hide()
+  $('#server-result').show()
+  $.post('/checkin/save', review_photos, function(resp) {
+    resp = JSON.parse(resp);
+    current_jid = resp.jid;
+    check_job_timer = setInterval(job_status, 2000);
+    waiting.remove();
   })
-
-  $('#send-photo').live('click', function(e) {
-    var waiting = loading.clone();
-    $('#server-result').append(waiting);
-    $('#fb-photos').hide();
-    $('#fb-albums').hide();
-    $('#review-photos').hide()
-    $('#server-result').show()
-    $.post('/checkin/save', review_photos, function(resp) {
-      resp = JSON.parse(resp);
-      current_jid = resp.jid;
-      check_job_timer = setInterval(job_status, 2000);
-      waiting.remove();
-    })
-  })
+})
 
 function getUIOption(img_src, img_info, img_title) {
   var publish = {
