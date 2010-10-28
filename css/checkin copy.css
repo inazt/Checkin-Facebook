@@ -1,0 +1,127 @@
+#fb-photos {
+  width: 600px;
+  min-height: 150px;
+  float: left;
+}
+#fb-photos #album_content {
+  float: left;
+}
+#fb-photos .fb-picture-div {
+  float: left;
+  width: 138px;
+  height: 138px;
+  margin:5px;
+  text-align: center;
+border:1px solid #999;
+       background-color:#EEE;
+padding:5px;
+        vertical-align:middle;
+cursor:pointer;
+}
+#fb-photos .hover {
+  background-color:#8497C0;
+}
+#fb-photos .fb-picture-div img {
+  border: 1px solid #AAA;
+  vertical-align:middle;
+}/*
+#fb-photos .fb-picture-div img:hover, #fb-photos .fb-picture-div img.hover {
+  background: #F1F1F1;
+  cursor: pointer;
+}
+*/
+.fb-thumb {
+  float: left;
+  width: 136px;
+  text-align: center;
+}
+#select-photos li {
+  list-style: none;
+  overflow: hidden;
+  background-color: #FFF;
+}
+
+.fb-album-detail {
+  margin-left: 166px;
+}
+
+#fb-albums {
+  float: left;
+  width: 600px;
+  min-height: 150px;
+}
+#fb-albums .fb-album {
+  margin-bottom: 10px;
+  padding:10px;
+  cursor: pointer;
+  border: 3px solid #999;
+}
+#fb-albums .fb-album:hover {
+  border: 3px solid #3B5998;
+  background-color:#FFD;
+}
+#fb-albums .fb-album .fb-thumb {
+  border:1px solid #CCC;
+  padding:10px;
+}
+#fb-albums .fb-album img {
+margin:0;padding:0;
+  /*border: 3px solid #FFF;*/
+}
+#fb-albums .fb-album h3 {
+  color:#3B5998;
+  margin:0;
+  font-size:14px;
+}
+
+#fb-albums .fb-album p {
+  margin: 0;
+  font-size: 0.8em;
+  font-weight: bold;
+  color:#666;
+}
+
+#review-photos {
+  float: left;
+  min-height: 150px;
+}
+#review-photos img {
+  padding: 10px;
+}
+
+#tab-nav li {
+  float: left;
+  list-style: none;
+  padding: 10px;
+}
+
+#review-photos img {
+  cursor: pointer;
+}
+
+.tab-el {
+  display: none; 
+}
+
+.tab-child {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+
+#tab-nav li a {
+  cursor: default;
+}
+
+/*
+** tuck
+*/
+
+#fb-albums .fb-album {
+	background: url("../images/block-bg.png");
+	border: 0;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+}

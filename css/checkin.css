@@ -1,28 +1,28 @@
 #fb-photos {
-  width: 600px;
+  width: 880px;
   min-height: 150px;
   float: left;
 }
 #fb-photos #album_content {
   float: left;
 }
-#fb-photos .fb-picture-div {
+#fb-photos .fb-picture-div, #review-photos div.review-photo {
   float: left;
+  cursor: pointer;
   width: 138px;
   height: 138px;
   margin:5px;
   text-align: center;
-border:1px solid #999;
-       background-color:#EEE;
+/*border:1px solid #999;*/
+background: url("../images/block-bg.png");
 padding:5px;
         vertical-align:middle;
-cursor:pointer;
 }
 #fb-photos .hover {
-  background-color:#8497C0;
+  background-color: #FF530F;
 }
-#fb-photos .fb-picture-div img {
-  border: 1px solid #AAA;
+#fb-photos .fb-picture-div img, #review-photos div.review-photo img {
+  border: 5px solid #fff;
   vertical-align:middle;
 }/*
 #fb-photos .fb-picture-div img:hover, #fb-photos .fb-picture-div img.hover {
@@ -38,7 +38,7 @@ cursor:pointer;
 #select-photos li {
   list-style: none;
   overflow: hidden;
-  background-color: #FFF;
+  /*background-color: #FFF;*/
 }
 
 .fb-album-detail {
@@ -57,19 +57,22 @@ cursor:pointer;
   border: 3px solid #999;
 }
 #fb-albums .fb-album:hover {
-  border: 3px solid #3B5998;
-  background-color:#FFD;
+  /*border: 3px solid #3B5998;
+  background-color:#FFD;*/
 }
 #fb-albums .fb-album .fb-thumb {
-  border:1px solid #CCC;
-  padding:10px;
+  /*border:1px solid #CCC;
+  padding:10px;*/
+  background: url("../images/bg-album.png") no-repeat right top;
+  padding: 12px 18px 5px 10px;
 }
-#fb-albums .fb-album img {
+#fb-albums .fb-album img, #server-result .server-item img {
 margin:0;padding:0;
   /*border: 3px solid #FFF;*/
+  border: 4px solid #fff;
 }
 #fb-albums .fb-album h3 {
-  color:#3B5998;
+  color:#416229;
   margin:0;
   font-size:14px;
 }
@@ -86,7 +89,7 @@ margin:0;padding:0;
   min-height: 150px;
 }
 #review-photos img {
-  padding: 10px;
+  /*padding: 10px;*/
 }
 
 #tab-nav li {
@@ -113,4 +116,110 @@ margin:0;padding:0;
 
 #tab-nav li a {
   cursor: default;
+}
+
+/*
+** tuck
+*/
+
+/* album */
+
+#fb-albums {width: 880px;}
+
+#fb-albums .fb-album,
+#server-result .server-item {
+	background: url("../images/block-bg.png");
+	border: 0;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+}
+
+#fb-albums h3.choose-album, .section-checkin h3.choose-photo, #review-photos h3.review-photo-for-send {
+	background: url("../images/h3-choosealbum.png") no-repeat;
+	display: block;
+	height: 50px;
+	text-indent: -9999px;
+	overflow: hidden;
+	width: 175px;
+}
+
+.section-checkin h1#page-title {
+	background: url("../images/h1-checkin.png") no-repeat;
+	display: block;
+	height: 60px;
+	text-indent: -9999px;
+	margin-bottom: 0;
+	overflow: hidden;
+	width: 120px;
+}
+
+/* choose photo */
+
+.section-checkin h3.choose-photo {
+	background: url("../images/h3-choose_pic.png") no-repeat;
+	height: 55px;
+	width: 125px;
+}
+
+#tab-nav li#li-show-all-albums a {
+	background: url("../images/bt-backto_album.png") no-repeat;
+	cursor: pointer;
+	display: block;
+	height: 50px;
+	text-indent: -9999px;
+	overflow: hidden;
+	width: 158px;
+}
+
+#tab-nav li#li-show-all-albums a:hover {
+	background-position: 0 -50px;
+}
+
+.section-checkin .tab-nav {clear: both; float: right; margin: 0 0 20px;}
+
+.section-checkin .tab-nav li {
+	display: inline;
+	padding: 0 0 0 10px;
+}
+
+p.selected-photos {text-align: right; margin: 0 0 0.5em;}
+
+#select-photos ul.tab-nav {margin: 30px 0 0;}
+
+/* review photo */
+.review-photo {
+	position: relative;
+}
+
+.review-photo img.delete {
+  cursor:pointer;
+	border: 0 !important;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#review-photos h3.review-photo-for-send {
+	background: url("../images/h3-all_pic.png") no-repeat;
+	height: 50px;
+	width: 265px;
+}
+
+/* checkin */
+#server-result {clear: both;}
+
+#server-result .server-item {
+	margin-bottom: 10px;
+	padding: 10px;
+	overflow: hidden;
+	width: 860px;
+}
+
+#server-result .server-item img {
+	float: left;
+	margin-right: 10px;
+}
+
+#server-result .server-item .publish-button, #server-result .server-item .place-info {
+	margin-left: 150px;
 }
