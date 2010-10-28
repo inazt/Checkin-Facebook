@@ -303,9 +303,14 @@ function checkin_facebook_login() {
       'user_photos',
     );
     
+    $query = '';
+    if($_REQUEST['theme']) {
+      $query = 'theme='.$_REQUEST['theme'];
+    }
+    
     $loginUrl = $facebook->getLoginUrl(array(
       'req_perms' => implode(',', $perms),
-      'next' => url('checkin', array('absolute' => TRUE)),
+      'next' => url('checkin', array('absolute' => TRUE, 'query' => $query)),
       'cancel_url' => url('<front>', array('absolute' => TRUE)),
     ));
     
