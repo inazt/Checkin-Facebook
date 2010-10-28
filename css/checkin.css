@@ -220,6 +220,20 @@ p.selected-photos {text-align: right; margin: 0 0 0.5em;}
 	margin-right: 10px;
 }
 
+#server-result .server-item .publish-button {font-style: italic;}
+
 #server-result .server-item .publish-button, #server-result .server-item .place-info {
 	margin-left: 150px;
+}
+.publish-button {
+  background-color: #5B74A8;
+  border-color: #29447E #29447E #1A356E;
+  border-style: solid;
+  border-width: 1px;
+  color: white;
+  cursor: pointer;
+  display: inline;
+  font-style: normal;
+  font-weight: bold;
+  padding: 5px 10px;
 }

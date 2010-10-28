@@ -24,12 +24,11 @@ function checkin_choose_photos() {
         document.getElementById('fb-root').appendChild(e);
       }());
 
-    $(document).ready(function() { 
+    $(document).ready(function() {
+      set_state(1); 
       loading = img.clone().attr({src: Drupal.settings.checkin.path +'/images/loading.gif'});
       $('#fb-albums').addClass('active');
-      $('#li-show-all-albums').hide();  
-      $('.second-page-item').hide();
-      $('.li-show-all-albums').hide();
+
       update_review_photo();
       //$('#page-title').hide();
     });
@@ -49,15 +48,18 @@ function checkin_choose_photos() {
     </script> 
     <p class='every-page-item selected-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></p>
     <ul class="tab-nav">
-      <li class='li-show-all-albums second-page-item'> 
+      <li class='show-all-albums-wrap'> 
         <button class="show-all-albums" >กลับไปอัลบั้ม</button>
       </li>
-      <li>
-        <button class="second-page-item go-review-button">ขั้นตอนต่อไป</button>
-      </li>
-      <li>
+      <li class='go-review-button-wrap'>
+        <button class="go-review-button">ขั้นตอนต่อไป</button>
+      </li> 
+      <li class='back-all-albums-wrap'>
+        <button class="show-all-albums">เลือกรูปเพิ่ม</button>
+      </li>  
+      <li class='go-checkin-wrap'>
         <button class="go-checkin">เช็คอิน</button>
-      </li>          
+      </li>             
     </ul>  
     <div style='clear:left'></div> 
     <div id='select-photos' class='tab-el active'>
@@ -78,16 +80,20 @@ function checkin_choose_photos() {
     <div id='server-result' class='tab-el'></div>
 
     <ul class="tab-nav">
-      <li class='li-show-all-albums second-page-item'> 
+      <li class='show-all-albums-wrap'> 
         <button class="show-all-albums" >กลับไปอัลบั้ม</button>
       </li>
-      <li>
-        <button class="second-page-item go-review-button">ขั้นตอนต่อไป</button>
+      <li class='go-review-button-wrap'>
+        <button class="go-review-button">ขั้นตอนต่อไป</button>
+      </li>     
+      <li class='back-all-albums-wrap'>
+        <button class="show-all-albums">เลือกรูปเพิ่ม</button>
       </li>
-      <li>
+      <li class='go-checkin-wrap'>
         <button class="go-checkin">เช็คอิน</button>
-      </li>          
-    </ul>   
+      </li> 
+          
+    </ul>     
 FBJS;
   
   return $output;

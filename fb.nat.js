@@ -61,13 +61,18 @@ function job_status() {
         var output = '<ul>';
         $(data.data).each(function (i, item) {
           var pub = div.clone().html('Publish').addClass('publish-button');
-          if (item.title == 'null') {
-            pub.html('Decode failed');
+          
+          var teaser = item.title + ': ' + item.content;
+          if (item.title == 'null' && item.content == 'null') {
+            pub.html('ไม่สามารถแปลป้าย QR ได้');
+            pub.attr('class', 'decode-error');
+            teaser = ''
           }
           var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
-          var div_section = div.clone().addClass('server-item').append(img_section).append(pub);
-          var div_info = div.clone().addClass('place-info').html(item.title + ':' +item.content);
-          div_section.append(div_info);
+          var div_section = div.clone().addClass('server-item').append(img_section);
+          
+          var div_info = div.clone().addClass('place-info').html(teaser);
+          div_section.append(div_info).append(pub);
           $('#server-result').show().append(div_section);
           output += '\
           <li> \
@@ -143,19 +148,68 @@ function showAlbum(aid) {
 
 function update_review_photo(operand) {
   operand = 1;
-  $('#total-review-photos').html(' ('+ $("#review-photos img.fb-photo-review").size()+' รูป)');
+  var n_select = $("#review-photos img.fb-photo-review").size();
+  $('#total-review-photos').html(' ('+ n_select +' รูป)');
+  if (current_state == 2 && n_select) {
+    $('.go-review-button-wrap').show();
+  }
+  else {
+    $('.go-review-button-wrap').hide();
+  }
+  
+  if (current_state == 3 && !n_select) {
+    $('.go-checkin').hide();
+  }
+  else {
+    $('.go-checkin').show();
+  }
 }
 
 function remove_review_photo(pid) { 
   delete(review_photos[pid]);
-  var selector = '#review-photos img#' +pid
-  $(selector).parent('div').hide('slow', function() { $(this).remove() })
+  var selector = '#review-photos img#' +pid;
+  $(selector).parent('div').fadeOut('slow', function() {
+    $(this).remove();
+    update_review_photo();
+  })
 }
 
+function set_state(state) {
+  current_state = state;
+  $('.tab-nav li').hide(); 
+  switch(current_state) {
+    case 1:
+      if ($("#review-photos img.fb-photo-review").size()) {
+        $('.go-review-button-wrap').show()
+      }
+      break;
+    case 2:
+      $('.show-all-albums-wrap').show(); 
+      if ($("#review-photos img.fb-photo-review").size()) {
+        $('.go-review-button-wrap').show()
+      }
+      
+      $('#show-all-albums-wrap').show();
+      $('#fb-albums').hide();
+      $('#fb-photos').show();
+      
+      break;
+      
+    case 3:
+      $('.back-all-albums-wrap, .go-checkin-wrap').show();
+      $('#fb-albums').hide();
+      break;
+    case 4:
+      break;
+    default:
+      break;
+  }
  
-$('.li-show-all-albums').live('click', function(e) { 
-  $('#li-show-all-albums').hide();
-  $('.second-page-item').hide();
+} 
+
+ 
+$('.show-all-albums').live('click', function(e) { 
+  set_state(1);
   $('#fb-photos').hide();
   $('#fb-albums').show();
   $('#album_content').html('');
@@ -166,6 +220,7 @@ $('.li-show-all-albums').live('click', function(e) {
 })
 
 $('.go-review-button').live('click', function(e) {
+  set_state(3);
   $('#review-photos').show();
   $('#fb-photos').hide();
   $('fb-albums').hide();
@@ -175,23 +230,17 @@ $('.go-review-button').live('click', function(e) {
 
 // Click for choose album
 $('li.fb-album').live('click', function(e) {
+  set_state(2);
   var self = $(this);
-  var curr_img = (self.children('.fb-thumb').children('img'));
-  //$('#tab-nav li a[href="#fb-photos"]').click();
-  $('#li-show-all-albums').show();
-  $('#fb-albums').hide();
-  $('#fb-photos').show();
-   
-  $('.second-page-item').show();
+  var curr_img = (self.children('.fb-thumb').children('img'));    
   FB.Canvas.setSize({height: 0});
   
   showAlbum(curr_img.attr('id'));
 })
 
-$('.fb-picture-div').live('click', function(e) {
-  //console.log('i do');
+$('.fb-picture-div').live('click', function(e) { 
   var self = $(this);
-  self= self.children('img')  
+  self= self.children('img');
   var self_photo = self;
   var photos = Photo.get($(self).attr('pid'));
 
@@ -206,11 +255,11 @@ $('.fb-picture-div').live('click', function(e) {
       var pic_containner = div.clone().addClass('review-photo').append(picture).append(img.clone().addClass('delete').attr({src: Drupal.settings.checkin.path +'/images/delete.png'}));
       
       $('#review-photos').append(pic_containner);
+      update_review_photo();
     }
     else {
       remove_review_photo(pid);
     }
-      update_review_photo();
   }) //end wait
 })
 
@@ -218,7 +267,6 @@ $('.delete').live('click', function(e) {
   var self = $(this);
   var rid = self.siblings('img').attr('id');
   remove_review_photo(rid);
-  update_review_photo();  
 
 }) 
 
@@ -243,6 +291,7 @@ $('.publish-button').live('click', function(e) {
  }) // FB.ui 
 }) // pubish.click 
 $('.go-checkin').live('click', function(e) {
+  set_state(4);
   var waiting = loading.clone();
   $('#server-result').append(waiting);
   $('#fb-photos').hide();
