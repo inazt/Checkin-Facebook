@@ -73,7 +73,7 @@ function checkin_menu() {
     'type' => MENU_CALLBACk,
   );
   $items['checkin'] = array(
-    'title' => t('Choose photos'),
+    'title' => t('เช็คอิน'),
     'description' => t('Choose photos to check in'),
     'page callback' => 'checkin_choose_photos',
     'access arguments' => array('access content'),
