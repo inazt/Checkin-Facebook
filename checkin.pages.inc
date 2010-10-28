@@ -16,14 +16,14 @@ function checkin_choose_photos() {
   $output = <<<FBJS
     <script type="text/javascript"> 
 
-    (function() {
-        $('body').append($('<div id="fb-root"></div>'))
-        var e = document.createElement('script'); e.async = true;
-        e.src = document.location.protocol +
-          '//connect.facebook.net/en_US/all.js';
+    (function($) {
+        $('body').append($('<div id="fb-root"></div>'));
+        var e = document.createElement('script');
+        e.async = true;
+        e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
         document.getElementById('fb-root').appendChild(e);
-      }());
-
+      })(jQuery);
+    
     $(document).ready(function() {
       set_state(1); 
       loading = img.clone().attr({src: Drupal.settings.checkin.path +'/images/loading.gif'});
@@ -32,7 +32,9 @@ function checkin_choose_photos() {
       update_review_photo();
       //$('#page-title').hide();
     });
+    
 
+    
     window.fbAsyncInit = function() {
         FB.init({
           appId  : '$apiKey',
@@ -45,6 +47,8 @@ function checkin_choose_photos() {
         FB.Canvas.setAutoResize();
         getAlbums();
     };
+    
+    
     </script> 
     <p class='every-page-item selected-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></p>
     <ul class="tab-nav">

@@ -10,21 +10,23 @@
   float: left;
   cursor: pointer;
   width: 138px;
-  height: 138px;
+  height: 140px;
   margin:5px;
   text-align: center;
 /*border:1px solid #999;*/
-background: url("../images/block-bg.png");
-padding:5px;
-        vertical-align:middle;
+	background: url("../images/block-bg.png");
+	padding:5px;
+	vertical-align:middle;
+	overflow: hidden;
 }
 #fb-photos .hover {
-  background-color: #FF530F;
+  background: #FF530F;
 }
 #fb-photos .fb-picture-div img, #review-photos div.review-photo img {
   border: 5px solid #fff;
   vertical-align:middle;
-}/*
+}
+/*
 #fb-photos .fb-picture-div img:hover, #fb-photos .fb-picture-div img.hover {
   background: #F1F1F1;
   cursor: pointer;
@@ -85,7 +87,7 @@ margin:0;padding:0;
 }
 
 #review-photos {
-  float: left;
+  overflow: hidden;
   min-height: 150px;
 }
 #review-photos img {
@@ -126,12 +128,13 @@ margin:0;padding:0;
 
 #fb-albums {width: 880px;}
 
-#fb-albums .fb-album,
-#server-result .server-item {
+#fb-albums .fb-album, #server-result .server-item {
 	background: url("../images/block-bg.png");
 	border: 0;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
+  float: left;
+  width: 860px;
 }
 
 #fb-albums h3.choose-album, .section-checkin h3.choose-photo, #review-photos h3.review-photo-for-send {
@@ -232,8 +235,11 @@ p.selected-photos {text-align: right; margin: 0 0 0.5em;}
   border-width: 1px;
   color: white;
   cursor: pointer;
-  display: inline;
-  font-style: normal;
+  display: block;
+  width: 55px;
+  text-align: center;
+  font-style: normal !important;
   font-weight: bold;
   padding: 5px 10px;
+  margin-top: 15px;
 }

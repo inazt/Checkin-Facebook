@@ -1,7 +1,7 @@
   var current_jid, check_job_timer, current_state;
   var review_photos = { } 
   var album_detail = { }
-  var div = $('<div />');
+  var div = $('<div></div>');
   var img = $('<img />'); 
   var p = $('<p />');
   var i = $('<i />');
@@ -10,7 +10,7 @@
   var span = $('<span />');
   var loading ;
 
-  Photo = {
+  var Photo = {
     Album: { 
       getAlbums: function(owner_id) {
         var getAlbumsFql = 'SELECT aid, object_id, name, cover_pid, size, link, visible, description, created, modified ' + 
@@ -59,16 +59,16 @@ function job_status() {
     $.each(server_data, function(k, data) {
       //if (data.status == true) {
         var output = '<ul>';
-        $(data.data).each(function (i, item) {
+        $(data['data']).each(function (i, item) {
           var pub = div.clone().html('Publish').addClass('publish-button');
           
-          var teaser = item.title + ': ' + item.content;
-          if (item.title == 'null' && item.content == 'null') {
+          var teaser = item['title'] + ': ' + item['content'];
+          if (item['title'] == 'null' && item['content'] == 'null') {
             pub.html('ไม่สามารถแปลป้าย QR ได้');
             pub.attr('class', 'decode-error');
             teaser = ''
           }
-          var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item.content, title: item.title});
+          var img_section  = img.clone().attr({src: item.path, pid: item.pid, info: item['content'], title: item['title']});
           var div_section = div.clone().addClass('server-item').append(img_section);
           
           var div_info = div.clone().addClass('place-info').html(teaser);
@@ -76,9 +76,9 @@ function job_status() {
           $('#server-result').show().append(div_section);
           output += '\
           <li> \
-            <img src="' + item.path + '" />\
-              <h2>' + item.title + '</h2>\
-              <p>' + item.content + '</p>\
+            <img src="' + item['path'] + '" />\
+              <h2>' + item['title'] + '</h2>\
+              <p>' + item['content'] + '</p>\
           </li> \
           ';
         }); // end each
@@ -88,66 +88,70 @@ function job_status() {
         */
         clearInterval(check_job_timer);
       //} //end if
-    }) //end each
+    }); //end each
   }); //end getJson
 }
+
 
 function getAlbums() {  
   var data = Photo.Album.getAlbums(FB.getSession().uid);
   $('#fb-albums').append(loading);
 
   FB.Data.waitOn([data.album, data.a_photo], function(args) {
-    FB.Array.forEach(data.album.value , function(detail) {
+    FB.Array.forEach(data.album['value'] , function(detail) {
       album_detail[detail.aid] = detail;
-    })
-
-    FB.Array.forEach(data.a_photo.value , function(album) {
+    });
+    
+    FB.Array.forEach(data.a_photo['value'] , function(album) {
       var aid = album.aid;
       //console.log(album, album.src, album.src_big, album.src_small);
       var detail = album_detail[aid];
       var div_section = li.clone().addClass('fb-album'); 
-      var img_section = div.clone().addClass('fb-thumb').append(img.clone().attr({src: album.src, id: album.aid, class: 'album_cover', aid: aid}));
+      var img_section = div.clone().addClass('fb-thumb').append(img.clone().addClass('album_cover').attr({src: album['src'], id: album['aid'], aid: aid}));
       var cover_section = div_section.append(img_section);
-
-      var div_detail = 	div.clone().addClass('fb-album-detail').append(h3.clone().html(detail.name));
-      div_detail.append(p.clone().html( 'จำนวน ' + detail.size +' รูป' ));
+      
+      
+      var div_detail = 	div.clone().addClass('fb-album-detail').append(h3.clone().html(detail['name']));
+      div_detail.append(p.clone().html( 'จำนวน ' + detail['size'] +' รูป' ));
       cover_section.append(div_detail);
       $('#fb-albums').append(cover_section);
-    })
+      
+    });
+    
   loading.remove();
-  })
+  });
   //FB.Canvas.setSize();
 } /// getPhotos
+
 
 /***  Show All Photos In Album ***/
 function showAlbum(aid) {
   var photos = Photo.Album.getPhotos(aid);  
   var album_content = $('#album_content');
   var div_img ;
-  var album_name = album_detail[aid].name;
+  var album_name = album_detail[aid]['name'];
   
   //album_content.append(h3.clone().html(album_name).addClass('album-name'));
   $('.album_name').html(album_name);
   $('#fb-photos').append(loading);
   photos.wait(function(photo) {
-    FB.Array.forEach(photos.value, function(photo) {
-      var photo = img.clone().addClass('fb-picture').attr({src: photo.src, object_id: photo.object_id, pid: photo.pid, alt: photo.caption});
+    FB.Array.forEach(photos['value'], function(photo) {
+      var photo = img.clone().addClass('fb-picture').attr({src: photo['src'], object_id: photo.object_id, pid: photo.pid, alt: photo['caption']});
       div_img = div.clone().addClass('fb-picture-div');
       div_img.append(photo);
       album_content.append(div_img);
-    })
+    });
     loading.remove();
-    $('#album-photos').append(album_content);
+    $('#album-photos').append(div.clone().addClass("clear")).append(album_content);
     if ( $('div .hover').size() == 0 ) {
       repaint();
     }
     $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
     FB.Canvas.setSize();
-  })
+  });
 } //end showAllbum(id)
 
-function update_review_photo(operand) {
-  operand = 1;
+function update_review_photo() {
   var n_select = $("#review-photos img.fb-photo-review").size();
   $('#total-review-photos').html(' ('+ n_select +' รูป)');
   if (current_state == 2 && n_select) {
@@ -171,7 +175,7 @@ function remove_review_photo(pid) {
   $(selector).parent('div').fadeOut('slow', function() {
     $(this).remove();
     update_review_photo();
-  })
+  });
 }
 
 function set_state(state) {
@@ -180,13 +184,13 @@ function set_state(state) {
   switch(current_state) {
     case 1:
       if ($("#review-photos img.fb-photo-review").size()) {
-        $('.go-review-button-wrap').show()
+        $('.go-review-button-wrap').show();
       }
       break;
     case 2:
       $('.show-all-albums-wrap').show(); 
       if ($("#review-photos img.fb-photo-review").size()) {
-        $('.go-review-button-wrap').show()
+        $('.go-review-button-wrap').show();
       }
       
       $('#show-all-albums-wrap').show();
@@ -217,7 +221,7 @@ $('.show-all-albums').live('click', function(e) {
   $('#review-photos').hide();
   $('#select-photos').show();
   $( 'html, body' ).animate( { scrollTop: 0 }, 'fast' );
-})
+});
 
 $('.go-review-button').live('click', function(e) {
   set_state(3);
@@ -225,7 +229,7 @@ $('.go-review-button').live('click', function(e) {
   $('#fb-photos').hide();
   $('fb-albums').hide();
 
-})
+});
 
 
 // Click for choose album
@@ -236,8 +240,9 @@ $('li.fb-album').live('click', function(e) {
   FB.Canvas.setSize({height: 0});
   
   showAlbum(curr_img.attr('id'));
-})
+});
 
+// Test it
 $('.fb-picture-div').live('click', function(e) { 
   var self = $(this);
   self= self.children('img');
@@ -247,7 +252,7 @@ $('.fb-picture-div').live('click', function(e) {
   self.parent('div').toggleClass('hover');
 
   photos.wait(function(photo) {
-    var img_section = img.clone().attr({src: self.src}); 
+    //var img_section = img.clone().attr({src: self.src}); 
     var pid = photo[0].pid;
     if(review_photos[pid] == undefined) {
       review_photos[pid] = 'src_big='+photo[0].src_big+"&"+'src_small='+self.get(0).src;
@@ -260,15 +265,15 @@ $('.fb-picture-div').live('click', function(e) {
     else {
       remove_review_photo(pid);
     }
-  }) //end wait
-})
+  }); //end wait
+});
 
 $('.delete').live('click', function(e) {
   var self = $(this);
   var rid = self.siblings('img').attr('id');
   remove_review_photo(rid);
 
-}) 
+});
 
 $('.publish-button').live('click', function(e) {
   FB.Canvas.setSize({height: 500});
@@ -288,23 +293,23 @@ $('.publish-button').live('click', function(e) {
        //console.log(response);
        alert('Post was not published.');
      }
- }) // FB.ui 
-}) // pubish.click 
+ }); // FB.ui 
+}); // pubish.click 
 $('.go-checkin').live('click', function(e) {
   set_state(4);
   var waiting = loading.clone();
   $('#server-result').append(waiting);
   $('#fb-photos').hide();
   $('#fb-albums').hide();
-  $('#review-photos').hide()
-  $('#server-result').show()
+  $('#review-photos').hide();
+  $('#server-result').show();
   $.post('/checkin/save', review_photos, function(resp) {
     resp = JSON.parse(resp);
     current_jid = resp.jid;
     check_job_timer = setInterval(job_status, 2000);
     waiting.remove();
-  })
-})
+  });
+});
 
 function getUIOption(img_src, img_info, img_title) {
   var publish = {
