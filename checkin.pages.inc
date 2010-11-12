@@ -5,14 +5,16 @@
  */
 function checkin_choose_photos() {
   drupal_add_css(drupal_get_path('module', 'checkin') . '/css/checkin.css');
-  drupal_add_js(array('checkin' =>  array('path' => '/'.drupal_get_path('module', 'checkin'))), 'setting');
+  drupal_add_js(array('checkin' =>  array('path' => base_path().drupal_get_path('module', 'checkin'))), 'setting');
   // Check login.
+  //echo(print_r($_REQUEST, 1). print_r($_SERVER, 1));
+
   $me = checkin_facebook_login();
   $apiKey = variable_get('checkin_app_api_key', ''); 
   $facebook = checkin_facebook();
   $session = $facebook->getSession(); 
   $json_session = json_encode($session);
-  drupal_add_js(drupal_get_path('module', 'checkin') . '/fb.nat.js');
+  drupal_add_js(drupal_get_path('module', 'checkin') . '/checkin.js');
   $output = <<<FBJS
     <script type="text/javascript"> 
 
@@ -43,7 +45,6 @@ function checkin_choose_photos() {
           session: $json_session, 
           xfbml  : true  // parse XFBML
         });
-
         FB.Canvas.setAutoResize();
         getAlbums();
     };
@@ -64,6 +65,9 @@ function checkin_choose_photos() {
       <li class='go-checkin-wrap'>
         <button class="go-checkin">เช็คอิน</button>
       </li>             
+      <li class='start-over-wrap'>
+        <button class='start-over'>เลือกรูปใหม่</button>
+      </li>
     </ul>  
     <div style='clear:left'></div> 
     <div id='select-photos' class='tab-el active'>
@@ -96,6 +100,9 @@ function checkin_choose_photos() {
       <li class='go-checkin-wrap'>
         <button class="go-checkin">เช็คอิน</button>
       </li> 
+      <li class='start-over-wrap'>
+        <button class='start-over'>เลือกรูปใหม่</button>
+      </li>
           
     </ul>     
 FBJS;

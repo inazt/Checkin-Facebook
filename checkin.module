@@ -3,6 +3,7 @@
 define("CHECKIN_STATUS_PENDING", 0, TRUE);
 define("CHECKIN_STATUS_OK", 1, TRUE);
 define("CHECKIN_STATUS_ERROR", 2, TRUE);
+define("CHECKIN_STATUS_DOES_NOT_MATCH", 3, TRUE);
 define("CHECKIN_DEFAULT_IMAGE_PATH", 'checkin_images', TRUE);
 
 /**
@@ -302,19 +303,23 @@ function checkin_facebook_login() {
     $perms = array(
       'user_photos',
     );
-    
+    $absolute = TRUE; 
     $query = '';
     if($_REQUEST['theme']) {
       $query = 'theme='.$_REQUEST['theme'];
+      $absolute = FALSE;
     }
     
     $loginUrl = $facebook->getLoginUrl(array(
+      'canvas' => 1,
+      'fbconnect' => 0,
       'req_perms' => implode(',', $perms),
-      'next' => url('checkin', array('absolute' => TRUE, 'query' => $query)),
+      'next' => url('checkin', array('absolute' => $absolute, 'query' => $query)),
       'cancel_url' => url('<front>', array('absolute' => TRUE)),
     ));
-    
-    drupal_goto($loginUrl);
+    $js = 'top.location.href="'. $loginUrl .'"';
+    drupal_add_js(array('checkin' =>  array('loginUrl' => $loginUrl)), 'setting');
+    drupal_add_js($js, 'inline'); 
   }
   return $me;
 }
@@ -369,7 +374,7 @@ function checkin_save() {
 
   foreach ($post_request as $key => $value) {
     $loop_start = time();
-    $image_path = '/'. _get_upload_path(). '/'.$key .'_s';
+    $image_path = '/'. _get_upload_path(). '/'.$key .'_s.jpg';
     // Save checkin data.
     $vars = array(
       'fbuid' => checkin_get_fbuid(),
@@ -417,20 +422,20 @@ function _send_to_decode_service(&$vars, $opts) {
     $save_img = time();
     _save_small_img($fb_link_s, $pid);
     watchdog('SAVING--TIME = ', time() - $save_img); 
-    $server = 'http://gonorth.opendream.in.th' . _get_upload_path();
+    $server = $GLOBALS['base_url']. base_path()._get_upload_path();
 
     // Send data success.
     if ($result->code == 200 && $result->data == 'OK') {
-      $_result = array($opts['pid'] => array('status' => TRUE, 'message' => t('Send data successfully.'), 'photo' => $server. $opts['pid'].'_s'));
+      $_result = array($opts['pid'] => array('status' => TRUE, 'message' => t('Send data successfully.'), 'photo' => $server. $opts['pid'].'_s.jpg'));
     }
     // Send data failed.
     else {
-      $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Send data failed.'), 'photo' => $server. $opts['pid'].'_s'));
+      $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Send data failed.'), 'photo' => $server. $opts['pid'].'_s.jpg'));
     }
   }
   // Failed.
   else {
-    $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Cannot save checkin data.'), 'photo' => $server. $opts['pid'].'_s'));
+    $_result = array($opts['pid'] => array('status' => FALSE, 'message' => t('Cannot save checkin data.'), 'photo' => $server. $opts['pid'].'_s.jpg'));
   }
   
   return $_result;
@@ -448,8 +453,8 @@ function _save_small_img($url, $pid) {
   $upload_path = _get_upload_path(); 
   file_check_directory($upload_path, FILE_CREATE_DIRECTORY);
   $image_data = drupal_http_request($url);
-  $handler = file_save_data($image_data->data, $upload_path . '/'. $pid .'_s' , FILE_EXISTS_RENAME);
-  return $upload_path .'/'. $pid .'_s'; 
+  $handler = file_save_data($image_data->data, $upload_path . '/'. $pid .'_s.jpg' , FILE_EXISTS_RENAME);
+  return $upload_path .'/'. $pid .'_s.jpg'; 
 }
 
 /**
@@ -510,16 +515,14 @@ function job_handler($jid) {
        'pid' => $checkin_obj->image_id,
        'title' => '',
        'content' => '',
+       'status' => $checkin_obj->status,
      );
      $node = node_load($checkin_obj->place_id);
      if ($node) {
        $data['content'] = check_plain($node->body); 
        $data['title'] = check_plain($node->title); 
      }
-     else { // can't decode  
-       $data['content'] = 'null'; 
-       $data['title'] = 'null'; 
-     }
+
      $return[] = array(
        'status' => $status,
        'data' => $data,
@@ -588,9 +591,7 @@ function checkin_qr($cid, $jid) {
     'status' => CHECKIN_STATUS_PENDING,
     'status_updated' => time(),
   );
-
   watchdog('REQUEST', print_r($_REQUEST, 1));
-
   if (empty($_REQUEST['data'])) {
     $vars['status'] = CHECKIN_STATUS_ERROR;
     watchdog('DECODE STATUS', $cid .'-'. $jid . '=--==---Not Found');
@@ -598,11 +599,14 @@ function checkin_qr($cid, $jid) {
   else {
     $place_name = $_REQUEST['data'];
     $vars['status'] = CHECKIN_STATUS_ERROR;
-
     $place_id = db_result(db_query("SELECT nid FROM {node} WHERE type = 'places' AND title = '%s'", $place_name));
+
     if($place_id != FALSE) {
       $vars['status'] = CHECKIN_STATUS_OK;
       $vars['place_id'] = $place_id;
+    }
+    else {
+      $vars['status'] = CHECKIN_STATUS_DOES_NOT_MATCH;
     }
   } 
   _checkin_save($vars);
