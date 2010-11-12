@@ -463,7 +463,7 @@ function _save_small_img($url, $pid) {
 function checkin_publish($message, $image_path = NULL) {
   $facebook = checkin_facebook();
   
-  $access_token = '129673757084722|110499ce5724c2403b4b4a61-896050346|ZIan0TEe_8gTP1JsCrCYDoFcK-A';
+  $access_token = '';
   
   drupal_set_message($message);
   drupal_set_message($image_path);
