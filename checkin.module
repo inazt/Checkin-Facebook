@@ -4,6 +4,8 @@ define("CHECKIN_STATUS_PENDING", 0, TRUE);
 define("CHECKIN_STATUS_OK", 1, TRUE);
 define("CHECKIN_STATUS_ERROR", 2, TRUE);
 define("CHECKIN_STATUS_DOES_NOT_MATCH", 3, TRUE);
+define("CHECKIN_STATUS_CUSTOM_PLACE", 4, TRUE);
+define("CHECKIN_STATUS_CUSTOM_PLACE_OK", 5, TRUE);
 define("CHECKIN_DEFAULT_IMAGE_PATH", 'checkin_images', TRUE);
 
 /**
@@ -50,6 +52,13 @@ function checkin_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'checkin.pages.inc',
   );
+  $items['checkin/manual_place_check'] = array(
+    'title' => ('Manual Check'),
+    'description' => t('User add place manually'),
+    'page callback' => 'manual_place_check',
+    'access callback' => 'checkin_user_access',
+    'type' => MENU_CALLBACK, 
+  );
   $items['checkin/save'] = array(
     'title' => t('Save'),
     'description' => t('Save checkin data'),
@@ -63,7 +72,7 @@ function checkin_menu() {
     'page callback' => 'checkin_qr',
     'page arguments' => array(2, 3),
     'access callback' => 'checkin_qr_access',
-    'type' => MENU_CALLBACk,
+    'type' => MENU_CALLBACK,
   );
   $items['checkin/qr/job/%/status'] = array(
     'title' => t('Callback receiver'),
@@ -71,7 +80,23 @@ function checkin_menu() {
     'page callback' => 'job_handler',
     'page arguments' => array(3),
     'access callback' => 'checkin_qr_access',
-    'type' => MENU_CALLBACk,
+    'type' => MENU_CALLBACK,
+  );
+  $items['checkin/detail/%/%'] = array(
+    'title' => t('Checkin Support'),
+    'description' => t('Checkin Friend Support'),
+    'page callback' => 'checkin_support',
+    'page arguments' => array(2,3),
+    'access callback' => 'checkin_qr_access',
+    'type' => MENU_CALLBACK, 
+  );
+  $items['checkin/detail/%'] = array(
+    'title' => t('Checkin detail'),
+    'description' => t('View Checkin detail'),
+    'page callback' => 'checkin_detail',
+    'page arguments' => array(2),
+    'access callback' => 'checkin_qr_access',
+    'type' => MENU_CALLBACk, 
   );
   $items['checkin'] = array(
     'title' => t('เช็คอิน'),
@@ -97,6 +122,96 @@ function checkin_menu() {
   return $items;
 }
 
+function checkin_detail($cid) {
+  $fbobj = check_and_get_facebook_data();
+  $checkin_detail = get_checkin_detail($cid);
+  if(empty($checkin_detail) || empty($cid)) {
+    drupal_goto('checkin');
+  }
+  $supporters = get_support_detail($cid);
+  $num_of_supporters = count($supporters);
+  $fbuid = $fbobj['uid'];
+  //drupal_set_message('<pre>'. print_r($supporters, 1). '</pre>');
+  $html = sprintf("%s %s <br>", t('สถานที่: '),  $checkin_detail->custom_place);
+  $html.= sprintf("<img src=\"%s\" />", $checkin_detail->image_path);
+  
+  if(has_supported($cid, $fbuid) == FALSE) {
+    $html.= sprintf("<br> <a href=%s>%s</a>", '/checkin/detail/'.$cid.'/support', t('ยืนยัน')); 
+  }
+  else {
+    $html.= sprintf("<br> <a href=%s>%s</a>", '/checkin/detail/'.$cid.'/unsupport', 'ยกเลิกการยืนยัน'); 
+  }
+  if(is_verified_place($checkin_detail, $num_of_supporters) == CHECKIN_STATUS_CUSTOM_PLACE_OK) {
+    drupal_set_message('verified place');
+  } 
+  else {
+    drupal_set_message('unverified place');
+  }
+  $html.= sprintf("<br /><br /> %s (%d คน)<br />",t('รายชื่อผู้ยืนยัน'), $num_of_supporters);
+  //drupal_set_message(print_r($checkin_detail, 1));
+  foreach ($supporters as $supporter) {
+   $html.=(print_r($supporter, 1));
+   $html.="<br>";
+  }
+  return $html; 
+}
+
+function is_verified_place($checkin_detail, $num_of_supporters) {
+  $current_status = $checkin_detail->status;
+  $cid = $checkin_detail->cid;
+  $place_name = $checkin_detail->custom_place;
+  $ret_status ;
+  if($current_status == CHECKIN_STATUS_CUSTOM_PLACE) {
+    if($num_of_supporters >= variable_get('min_supporters', 1)) {
+      $vars = array(
+        'cid' => $cid,
+        'place_id' => '0',
+        'status' => CHECKIN_STATUS_CUSTOM_PLACE_OK,
+        'status_updated' => time(),
+        'custom_place' => $place_name,
+      );
+      $c = _checkin_save($vars);
+      $ret_status = CHECKIN_STATUS_CUSTOM_PLACE_OK;
+    }
+    else {
+      $ret_status = CHECKIN_STATUS_CUSTOM_PLACE;
+    }
+  }
+  else if ($current_status == CHECKIN_STATUS_CUSTOM_PLACE_OK) {
+    $ret_status = CHECKIN_STATUS_CUSTOM_PLACE_OK;
+    if($num_of_supporters < variable_get('min_supporters', 1)) {
+      $vars = array(
+        'cid' => $cid,
+        'place_id' => '0',
+        'status' => CHECKIN_STATUS_CUSTOM_PLACE,
+        'status_updated' => time(),
+        'custom_place' => $place_name,
+      );
+      $c = _checkin_save($vars);
+      $ret_status = CHECKIN_STATUS_CUSTOM_PLACE;
+    } 
+  } 
+  return $ret_status;
+}
+function has_supported($cid, $fbuid) {
+  $row = db_fetch_object(db_query("SELECT COUNT(*) as count FROM {checkin_custom} WHERE cid = %d AND fbuid = %d", $cid, $fbuid));
+  return ($row->count)==1; 
+}
+function get_support_detail($cid) {
+  $checkin_detail= get_checkin_detail($cid);
+  $rows = array();
+  $db_query = db_query("SELECT * FROM {checkin_custom} WHERE cid = %d", $cid);
+  while($row = db_fetch_object($db_query) ) {
+    $rows[] = $row;
+  }
+  return $rows;
+}
+function get_checkin_detail($cid) {
+  $row = db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
+  //$row2 = db_fetch_object(db_query("SELECT * FROM {checkin_custom} WHERE cid = %d", $cid));
+  //drupal_set_message(print_r($row2, 1));
+  return $row;
+}
 function checkin_test() {
   /*$vars = array(
     'cid' => 2,
@@ -240,7 +355,7 @@ function checkin_register() {
     dm($me);
     
     // Is fbuid this registered?
-    if (!checkin_is_registered($me['id'])) {
+    if (checkin_is_registered($me['id']) == FALSE) {
       // Register new user account.
       $account = array(
         'name' => $me['id'],
@@ -351,30 +466,28 @@ function get_post_request(&$_POST) {
   }
   return $image_link;
 }
+
+function get_job_id() {
+  $jid = uniqid(); 
+  return $jid;
+}
 /**
  * JSON Save check in data.
  */
 function checkin_save() {
-  /*
-  // If have no necessary data.
-  if (!($src_small || $src_big)) {
-    drupal_json(array('status' => FALSE, 'message' => '', 'total' => $total_objs, 'script' => 'testvar = "hello"', 'data' => $js_out));
-    return;
-  } 
-  */
-
-  $jid = uniqid(); 
-  $post_request = get_post_request(&$_POST);
-  $return_objects = array();
-
+  $jid = get_job_id();
   header('Content-Type: application/json');
   print drupal_json(array('jid' => $jid));
+
+  $post_request = get_post_request(&$_POST);
+  $return_objects = array();
 
   $start_time = time();
 
   foreach ($post_request as $key => $value) {
     $loop_start = time();
     $image_path = '/'. _get_upload_path(). '/'.$key .'_s.jpg';
+
     // Save checkin data.
     $vars = array(
       'fbuid' => checkin_get_fbuid(),
@@ -391,23 +504,20 @@ function checkin_save() {
     $result_object = _send_to_decode_service(&$vars, $idx_opts);
     $return_objects['data'][$key] = $result_object[$key];
 
-    watchdog('IN LOOP TO DECODE TIME '.$key, time()- $loop_start);
+    watchdog('IN LOOP TO SAVE EACH IMAGE TO DRUPAL FS'.$key, time()- $loop_start);
 
   } // end foreach
-
-  //check_job_status($jid);  
   watchdog('TOTAL TIME = '.$key, time() - $start_time);
-
 }
 
 function _send_to_decode_service(&$vars, $opts) {
   $checkin = _checkin_save($vars);
-
   $_result = array();
 
   // Completed.
   if ($checkin == true) {
     $wait_qr = time();
+
     // Send image path and callback to QR service.
     $pid = $opts['pid'];
     $fb_link_s = $opts['link']['src_small'];
@@ -418,7 +528,7 @@ function _send_to_decode_service(&$vars, $opts) {
     $data = "image_src=".$opts['link']['src_big']. "&callback=". url('checkin/qr/'. $checkin->cid .'/'. $checkin->jid, array('absolute' => TRUE));
    
     $result = drupal_http_request($service_url, $headers, 'POST', $data);
-    watchdog('QR-RESPONSED-TIME', time() - $wait_qr);
+    watchdog('QR-SERVER-RESPONSED-TIME', time() - $wait_qr);
     $save_img = time();
     _save_small_img($fb_link_s, $pid);
     watchdog('SAVING--TIME = ', time() - $save_img); 
@@ -463,7 +573,7 @@ function _save_small_img($url, $pid) {
 function checkin_publish($message, $image_path = NULL) {
   $facebook = checkin_facebook();
   
-  $access_token = '';
+  $access_token = '129673757084722|110499ce5724c2403b4b4a61-896050346|ZIan0TEe_8gTP1JsCrCYDoFcK-A';
   
   drupal_set_message($message);
   drupal_set_message($image_path);
@@ -558,6 +668,25 @@ function check_job_status($jid) {
 /**
  * Save checkin data.
  */
+function _manual_save($method, $vars) {
+  /*
+  if ($method == 'add') {
+    if (db_query("INSERT INTO {checkin_custom} (cid, pname, count, supporter) VALUES ('%d', %s, %d, '%s')", $vars['cid'], $vars['pname'], $vars['count'], $vars['supporter'])) {
+      $cid = db_last_insert_id('checkin', 'cid');
+      return db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
+  } 
+  else if ($method == 'update') {
+    // Update.
+    if (db_query("UPDATE {checkin_custom} SET counter = %d WHERE cid = %d", $status, $status_updated, $cid)) {
+      return db_fetch_object(db_query("SELECT * FROM {checkin_custom} WHERE cid = %d", $cid));
+    }
+  }
+  */
+}
+
+/**
+ * Save checkin data.
+ */
 function _checkin_save($vars) {
   $vars = (array)$vars;
   // Extract.
@@ -566,7 +695,7 @@ function _checkin_save($vars) {
   }
   // Update.
   if ($cid) {
-    if (db_query("UPDATE {checkin} SET place_id = %d, status = %d, status_updated = %d WHERE cid = %d", $place_id, $status, $status_updated, $cid)) {
+    if (db_query("UPDATE {checkin} SET place_id = %d, status = %d, status_updated = %d, custom_place='%s' WHERE cid = %d", $place_id, $status, $status_updated, $custom_place, $cid)) {
       return db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
     }
   }
@@ -597,9 +726,11 @@ function checkin_qr($cid, $jid) {
     watchdog('DECODE STATUS', $cid .'-'. $jid . '=--==---Not Found');
   }
   else {
-    $place_name = $_REQUEST['data'];
     $vars['status'] = CHECKIN_STATUS_ERROR;
-    $place_id = db_result(db_query("SELECT nid FROM {node} WHERE type = 'places' AND title = '%s'", $place_name));
+
+    $place_name = $_REQUEST['data'];
+    $place_id = get_id_from_place($place_name); 
+      
 
     if($place_id != FALSE) {
       $vars['status'] = CHECKIN_STATUS_OK;
@@ -611,4 +742,91 @@ function checkin_qr($cid, $jid) {
   } 
   _checkin_save($vars);
  // TODO: --- Set Header
+}
+function get_id_from_place($place_name) {
+  $place_id = db_result(db_query("SELECT nid FROM {node} WHERE type = 'places' AND title = '%s'", $place_name));
+  return $place_id; 
+}
+
+function manual_place_check() {
+  // Save checkin data.
+  $cid = $_POST['cid'];
+  $place_name = $_POST['place_name'];
+  $vars = array(
+    'cid' => $cid,
+    'place_id' => '0',
+    'status' => CHECKIN_STATUS_CUSTOM_PLACE,
+    'status_updated' => time(),
+    'custom_place' => $place_name,
+  );
+
+  $c = _checkin_save($vars);
+  //drupal_set_message('post = '. print_r($_POST, 1));
+  //drupal_set_message('c checkin save= ' . print_r($c, 1));
+  $place_id = get_id_from_place($place_name);
+
+  header('Content-Type: application/json');
+
+  if($place_id != FALSE) {
+    $result = node_load($place_id); 
+    print drupal_json($result);
+  }
+  else if($cid) {
+    $out = get_checkin_detail($cid);
+    $out->support_url = '/checkin/detail/'.$cid;
+    print drupal_json($out);
+  }
+  else {
+    $out = array('error');
+    print drupal_json($out);
+  }
+}
+
+function get_facebook_cookie($app_id, $application_secret) {
+  $args = array();
+  parse_str(trim($_COOKIE['fbs_' . $app_id], '\\"'), $args);
+  ksort($args);
+  $payload = '';
+  foreach ($args as $key => $value) {
+    if ($key != 'sig') {
+      $payload .= $key . '=' . $value;
+    }
+  }
+  if (md5($payload . $application_secret) != $args['sig']) {
+    return null;
+  }
+  return $args;
+}
+
+function check_and_get_facebook_data() {
+  $appId = variable_get('checkin_app_api_key', '');
+  $secret = variable_get('checkin_app_secret_key', '');
+  return get_facebook_cookie($appId, $secret);
+}
+function checkin_support($cid, $method) {
+  $checkin_detail = get_checkin_detail($cid);
+  $payload_status = check_and_get_facebook_data();
+  $checkin_status = get_checkin_detail($cid);
+  if(empty($cid) || empty($method) || empty($checkin_status)) {
+    drupal_goto('checkin');
+  }
+  if($method == 'support') {
+    if($payload_status != null) {
+      if (db_query("INSERT INTO {checkin_custom} (cid, fbuid, timestamp) VALUES ('%d', '%d', '%d')", $cid, $payload_status['uid'], time() )) {
+        drupal_goto('checkin/detail/'.$cid);
+      }
+      else {
+      }
+    }
+    else {
+      print drupal_json(array('error' => 'error'));
+    }
+  }
+  else if ($method == 'unsupport') {
+    db_query("DELETE FROM {checkin_custom} WHERE cid=%d AND fbuid=%d", $cid, $payload_status['uid']); 
+    drupal_goto('checkin/detail/'.$cid);
+  }
+  else {
+    print 'error';
+  }
 }

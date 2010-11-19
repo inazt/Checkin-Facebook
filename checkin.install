@@ -15,6 +15,64 @@ function checkin_uninstall() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function checkin_update_6200() {
+  $ret = array();
+
+  $schema['checkin_custom'] = array(
+    'description' => 'Custom places chckin information.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'The Checkin identifier for place.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+	  'fbuid' => array(
+		  'description' => 'Place key name.',
+		  'type' => 'int',
+		  'unsigned' => TRUE,
+		  'not null' => TRUE,
+    ),
+	  'timestamp' => array(
+		  'description' => 'Place timestamp',
+		  'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+    ),
+  ),
+    'primary key' => array('cid', 'fbuid'),
+  ); 
+
+  db_drop_table($ret, 'checkin_custom');
+  db_create_table($ret, 'checkin_custom', $schema['checkin_custom']);
+
+  return $ret;
+}
+/*
+function checkin_update_6300() {
+  $ret = array();
+  db_add_field($ret, 'checkin_custom', 'supporter', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, ));
+  return $ret; 
+}
+*/
+/*
+function checkin_update_6400() {
+  $ret = array();
+  db_add_field($ret, 'checkin', 'custom_place', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, ));
+  return $ret;
+}
+*/
+/*
+function checkin_update_6500() {
+  $ret = array();
+  db_drop_primary_key($ret, 'checkin_custom'); 
+  db_add_primary_key($ret, 'checkin_custom', array('cid', 'fbuid'));
+}
+*/
+
+/**
  * Implementation of hook_schema().
  */
 function checkin_schema() {
@@ -134,6 +192,8 @@ function checkin_schema() {
     ),
     'primary key' => array('uid'),
   );
+
+
   /*$schema['places'] = array(
     'description' => 'Places information.',
     'fields' => array(

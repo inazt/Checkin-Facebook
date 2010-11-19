@@ -105,7 +105,7 @@ margin:0;padding:0;
 }
 
 .tab-el {
-  display: none; 
+  display: none;
 }
 
 .tab-child {
@@ -228,6 +228,7 @@ p.selected-photos {text-align: right; margin: 0 0 0.5em;}
 #server-result .server-item .publish-button, #server-result .server-item .place-info {
 	margin-left: 150px;
 }
+
 .publish-button {
   background-color: #5B74A8;
   border-color: #29447E #29447E #1A356E;
@@ -237,6 +238,23 @@ p.selected-photos {text-align: right; margin: 0 0 0.5em;}
   cursor: pointer;
   display: block;
   width: 55px;
+  text-align: center;
+  font-style: normal !important;
+  font-weight: bold;
+  padding: 5px 10px;
+  margin-top: 15px;
+}
+
+.decode-error {
+	float: left;
+  background-color: #5B74A8;
+  border-color: #29447E #29447E #1A356E;
+  border-style: solid;
+  border-width: 1px;
+  color: white;
+  cursor: pointer;
+  display: block;
+  width: 200px;
   text-align: center;
   font-style: normal !important;
   font-weight: bold;
