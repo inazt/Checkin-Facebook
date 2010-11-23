@@ -123,37 +123,50 @@ function checkin_menu() {
 }
 
 function checkin_detail($cid) {
-  $fbobj = check_and_get_facebook_data();
+ $me = checkin_facebook_login('checkin/detail/'.$cid); 
+ 
   $checkin_detail = get_checkin_detail($cid);
   if(empty($checkin_detail) || empty($cid)) {
     drupal_goto('checkin');
   }
-  $supporters = get_support_detail($cid);
-  $num_of_supporters = count($supporters);
-  $fbuid = $fbobj['uid'];
-  //drupal_set_message('<pre>'. print_r($supporters, 1). '</pre>');
-  $html = sprintf("%s %s <br>", t('สถานที่: '),  $checkin_detail->custom_place);
-  $html.= sprintf("<img src=\"%s\" />", $checkin_detail->image_path);
-  
-  if(has_supported($cid, $fbuid) == FALSE) {
-    $html.= sprintf("<br> <a href=%s>%s</a>", '/checkin/detail/'.$cid.'/support', t('ยืนยัน')); 
+
+
+  // Login success.
+  if ($me) {
+    $supporters = get_support_detail($cid);
+    $num_of_supporters = count($supporters);
+    $fbuid = $me['id'];
+
+    if(is_verified_place($checkin_detail, $num_of_supporters) == CHECKIN_STATUS_CUSTOM_PLACE_OK) {
+      drupal_set_message('verified place', 'custom-place-status');
+    } 
+    else {
+      drupal_set_message('unverified place', 'custom-place-status');
+    }
+
+    $html = sprintf("<div class='custom-place-name'>%s %s</div>", t('สถานที่: '),  $checkin_detail->custom_place);
+    $html.= sprintf("<div class='custom-place-image'><img class='place-image' src=\"%s\" /></div>", $checkin_detail->image_path);
+
+    if(has_supported($cid, $fbuid) == FALSE) {
+      $html.= sprintf("<div class='custom-place-action'> <a href=%s>%s</a> </div>", '/checkin/detail/'.$cid.'/support', t('ยืนยัน')); 
+    }
+    else {
+      $html.= sprintf("<div class='custom-place-action'> <a href=%s>%s</a> </div>", '/checkin/detail/'.$cid.'/unsupport', 'ยกเลิกการยืนยัน'); 
+    }
+
+    $html.= sprintf("<div class='custom-place-supporters-wrapper'> %s (%d คน)",t('รายชื่อผู้ยืนยัน'), $num_of_supporters);
+    foreach ($supporters as $supporter) {
+     $html.="<div class='custom-place-supporter'>";
+       $html.=(print_r($supporter, 1));
+     $html.="</div>";
+    }
+    $html.= sprintf("</div>");
   }
   else {
-    $html.= sprintf("<br> <a href=%s>%s</a>", '/checkin/detail/'.$cid.'/unsupport', 'ยกเลิกการยืนยัน'); 
+    print 'notlogin';
   }
-  if(is_verified_place($checkin_detail, $num_of_supporters) == CHECKIN_STATUS_CUSTOM_PLACE_OK) {
-    drupal_set_message('verified place');
-  } 
-  else {
-    drupal_set_message('unverified place');
-  }
-  $html.= sprintf("<br /><br /> %s (%d คน)<br />",t('รายชื่อผู้ยืนยัน'), $num_of_supporters);
-  //drupal_set_message(print_r($checkin_detail, 1));
-  foreach ($supporters as $supporter) {
-   $html.=(print_r($supporter, 1));
-   $html.="<br>";
-  }
-  return $html; 
+
+  return $html.''; 
 }
 
 function is_verified_place($checkin_detail, $num_of_supporters) {
@@ -396,22 +409,18 @@ function checkin_facebook() {
 /**
  * Facebook login.
  */
-function checkin_facebook_login() {
-  
+function checkin_facebook_login($next='checkin') {
   $facebook = checkin_facebook();
-  
   $session = $facebook->getSession();
-
   $me = null;
   // Session based API call.
   if ($session) {
     try {
-      //$uid = $facebook->getUser();
       $me = $facebook->api('/me');
     } catch (FacebookApiException $e) {
       error_log($e);
     }
-  }
+  } 
 
   // Authenticate permissions.
   if (!$me) {
@@ -424,12 +433,12 @@ function checkin_facebook_login() {
       $query = 'theme='.$_REQUEST['theme'];
       $absolute = FALSE;
     }
-    
+    drupal_set_message('next = '. $next); 
     $loginUrl = $facebook->getLoginUrl(array(
       'canvas' => 1,
       'fbconnect' => 0,
       'req_perms' => implode(',', $perms),
-      'next' => url('checkin', array('absolute' => $absolute, 'query' => $query)),
+      'next' => url($next, array('absolute' => $absolute, 'query' => $query)),
       'cancel_url' => url('<front>', array('absolute' => TRUE)),
     ));
     $js = 'top.location.href="'. $loginUrl .'"';
@@ -591,19 +600,6 @@ function checkin_publish($message, $image_path = NULL) {
   catch(Exception $ex) {
     drupal_set_message(print_r($ex, 1));
   }
-  
-  /*drupal_json(array('status' => TRUE, 'message' => 'Published'));
-  
-  $data = array(
-    'access_token='. $access_token,
-    'message='.$message,
-    'picture='.$image_path,
-  );
-  $data = implode('&', $data);
-  $headers = array();
-  $result = drupal_http_request('https://graph.facebook.com/me/feed', $headers, 'POST', $data);
-  drupal_set_message(print_r($result, 1));*/
-  	//drupal_json(array('status' => TRUE, 'message' => 'published'));
 }
 
 /**
@@ -664,25 +660,6 @@ function check_job_status($jid) {
   return $status;
 }
 
-
-/**
- * Save checkin data.
- */
-function _manual_save($method, $vars) {
-  /*
-  if ($method == 'add') {
-    if (db_query("INSERT INTO {checkin_custom} (cid, pname, count, supporter) VALUES ('%d', %s, %d, '%s')", $vars['cid'], $vars['pname'], $vars['count'], $vars['supporter'])) {
-      $cid = db_last_insert_id('checkin', 'cid');
-      return db_fetch_object(db_query("SELECT * FROM {checkin} WHERE cid = %d", $cid));
-  } 
-  else if ($method == 'update') {
-    // Update.
-    if (db_query("UPDATE {checkin_custom} SET counter = %d WHERE cid = %d", $status, $status_updated, $cid)) {
-      return db_fetch_object(db_query("SELECT * FROM {checkin_custom} WHERE cid = %d", $cid));
-    }
-  }
-  */
-}
 
 /**
  * Save checkin data.
@@ -761,8 +738,6 @@ function manual_place_check() {
   );
 
   $c = _checkin_save($vars);
-  //drupal_set_message('post = '. print_r($_POST, 1));
-  //drupal_set_message('c checkin save= ' . print_r($c, 1));
   $place_id = get_id_from_place($place_name);
 
   header('Content-Type: application/json');
@@ -791,6 +766,7 @@ function checkin_support($cid, $method) {
   $checkin_detail = get_checkin_detail($cid);
   $payload_status = check_and_get_facebook_data();
   $checkin_status = get_checkin_detail($cid);
+  $me = checkin_facebook_login('checkin/detail/'.$cid); 
   if(empty($cid) || empty($method) || empty($checkin_status)) {
     drupal_goto('checkin');
   }
@@ -800,10 +776,23 @@ function checkin_support($cid, $method) {
         drupal_goto('checkin/detail/'.$cid);
       }
       else {
+         //insert failed
       }
     }
-    else {
-      print drupal_json(array('error' => 'error'));
+    else { 
+      $absolute = TRUE; 
+      $perms = array();
+      $query = '';
+      if($_REQUEST['theme']) {
+        $query = 'theme='.$_REQUEST['theme'];
+        $absolute = FALSE;
+      }
+      print 'error here';
+      drupal_set_message('payload error'. $loginUrl, 'error');
+      drupal_set_message($loginUrl);
+      //drupal_goto('http://gonorth.opendream.in.th/'.'checkin/detail/'.$cid);
+      drupal_goto('checkin/detail/'.$cid);
+      print drupal_json(array('error' => 'payload_error'));
     }
   }
   else if ($method == 'unsupport') {
