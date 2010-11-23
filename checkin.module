@@ -157,13 +157,16 @@ function checkin_detail($cid) {
     $html.= sprintf("<div class='custom-place-supporters-wrapper'> %s (%d คน)",t('รายชื่อผู้ยืนยัน'), $num_of_supporters);
     foreach ($supporters as $supporter) {
      $html.="<div class='custom-place-supporter'>";
-       $html.=(print_r($supporter, 1));
+      $facebook = checkin_facebook();
+       $sup_info= $facebook->api('/'.$supporter->fbuid);
+       //drupal_set_message(var_export($sup_info, 1));
+       $html.= sprintf("<a href='http://facebook.com/profile.php?id=%d'>%s</a>", $sup_info['id'], $sup_info['name']);
      $html.="</div>";
     }
     $html.= sprintf("</div>");
   }
   else {
-    print 'notlogin';
+    //print 'notlogin';
   }
 
   return $html.''; 
@@ -433,7 +436,7 @@ function checkin_facebook_login($next='checkin') {
       $query = 'theme='.$_REQUEST['theme'];
       $absolute = FALSE;
     }
-    drupal_set_message('next = '. $next); 
+    //drupal_set_message('next = '. $next); 
     $loginUrl = $facebook->getLoginUrl(array(
       'canvas' => 1,
       'fbconnect' => 0,
@@ -788,11 +791,11 @@ function checkin_support($cid, $method) {
         $absolute = FALSE;
       }
       print 'error here';
-      drupal_set_message('payload error'. $loginUrl, 'error');
-      drupal_set_message($loginUrl);
+      //drupal_set_message('payload error'. $loginUrl, 'error');
+      //drupal_set_message($loginUrl);
       //drupal_goto('http://gonorth.opendream.in.th/'.'checkin/detail/'.$cid);
-      drupal_goto('checkin/detail/'.$cid);
       print drupal_json(array('error' => 'payload_error'));
+      drupal_goto('checkin/detail/'.$cid);
     }
   }
   else if ($method == 'unsupport') {
