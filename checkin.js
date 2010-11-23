@@ -304,7 +304,7 @@ $('.decode-error').live('click', function(e) {
   var img_src = window.location.protocol + '//' + location.host+'/'+img.attr('src');
 
   var cid = self.attr('cid');
-  console.log('cid====', cid);
+  //console.log('cid====', cid);
   var data = {'place_name': $('input[cid='+ cid +']').val(), 'cid': cid};
   var data_obj;
   $.post('/checkin/manual_place_check', data, function(res) {
@@ -330,7 +330,7 @@ $('.decode-error').live('click', function(e) {
 });
 
 function manual_check(cid, place_name) {
-  console.log('manual_place');
+  //console.log('manual_place');
 } $('.publish-button').live('click', function(e) {
   var self = $(this);
   var img = $(self.siblings('img'));
