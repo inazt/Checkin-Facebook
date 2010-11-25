@@ -26,7 +26,14 @@ function checkin_settings_form() {
     '#type' => 'textfield',
     '#title' => t('QR service URL'),
     '#description' => t('Enter service url.'),
-    '#default_value' => variable_get('checkin_qrdecode_service_url', 'http://'),
+    '#default_value' => variable_get('checkin_qrdecode_service_url', 'http://203.151.20.185/decode/'),
+  );
+  $form['min_supporters'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum user to verify custom place'),
+    '#description' => t('Enter minimum verifyer:'),
+    '#default_value' => variable_get('min_supporters', 5),
+  
   );
   return system_settings_form($form);
 }
