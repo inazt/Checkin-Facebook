@@ -50,27 +50,26 @@ function checkin_update_6200() {
 
   return $ret;
 }
-/*
+
 function checkin_update_6300() {
   $ret = array();
   db_add_field($ret, 'checkin_custom', 'supporter', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, ));
   return $ret; 
 }
-*/
-/*
+
 function checkin_update_6400() {
   $ret = array();
   db_add_field($ret, 'checkin', 'custom_place', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, ));
   return $ret;
 }
-*/
-/*
+
+
 function checkin_update_6500() {
   $ret = array();
   db_drop_primary_key($ret, 'checkin_custom'); 
   db_add_primary_key($ret, 'checkin_custom', array('cid', 'fbuid'));
 }
-*/
+
 
 /**
  * Implementation of hook_schema().

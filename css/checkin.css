@@ -9,15 +9,15 @@
 #fb-photos .fb-picture-div, #review-photos div.review-photo {
   float: left;
   cursor: pointer;
-  width: 138px;
-  height: 140px;
-  margin:5px;
+  width: 150px;
+  height: 150px;
+  padding: 20px;
+  margin-right: 10px;
+  margin-bottom: 10px;
   text-align: center;
-/*border:1px solid #999;*/
-	background: url("../images/block-bg.png");
-	padding:5px;
-	vertical-align:middle;
-	overflow: hidden;
+  background: url("../images/block-bg.png");
+  vertical-align:middle;
+  overflow: hidden;
 }
 #fb-photos .hover {
   background: #FF530F;
@@ -26,21 +26,13 @@
   border: 5px solid #fff;
   vertical-align:middle;
 }
-/*
-#fb-photos .fb-picture-div img:hover, #fb-photos .fb-picture-div img.hover {
-  background: #F1F1F1;
-  cursor: pointer;
-}
-*/
 .fb-thumb {
-  float: left;
   width: 136px;
   text-align: center;
 }
 #select-photos li {
   list-style: none;
   overflow: hidden;
-  /*background-color: #FFF;*/
 }
 
 .fb-album-detail {
@@ -53,36 +45,34 @@
   min-height: 150px;
 }
 #fb-albums .fb-album {
-  margin-bottom: 10px;
-  padding:10px;
   cursor: pointer;
   border: 3px solid #999;
 }
 #fb-albums .fb-album:hover {
-  /*border: 3px solid #3B5998;
-  background-color:#FFD;*/
+
 }
 #fb-albums .fb-album .fb-thumb {
-  /*border:1px solid #CCC;
-  padding:10px;*/
   background: url("../images/bg-album.png") no-repeat right top;
   padding: 12px 18px 5px 10px;
 }
 #fb-albums .fb-album img, #server-result .server-item img {
 margin:0;padding:0;
-  /*border: 3px solid #FFF;*/
   border: 4px solid #fff;
 }
 #fb-albums .fb-album h3 {
-  color:#416229;
+  color:#3B5998;
   margin:0;
-  font-size:14px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#fb-albums .fb-album h3:hover {
+  text-decoration: underline;
 }
 
 #fb-albums .fb-album p {
   margin: 0;
-  font-size: 0.8em;
-  font-weight: bold;
+  font-size: 12px;
   color:#666;
 }
 
@@ -129,13 +119,14 @@ margin:0;padding:0;
 #fb-albums {width: 880px;}
 
 #fb-albums .fb-album, #server-result .server-item {
-	background: url("../images/block-bg.png");
-	border: 0;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
+  border: 0;
   float: left;
-  width: 860px;
+  width: 155px;
+  height: 200px;
+  text-align: center;
 }
+
+
 
 #fb-albums h3.choose-album, .section-checkin h3.choose-photo, #review-photos h3.review-photo-for-send {
 	background: url("../images/h3-choosealbum.png") no-repeat;
@@ -260,4 +251,14 @@ p.selected-photos {text-align: right; margin: 0 0 0.5em;}
   font-weight: bold;
   padding: 5px 10px;
   margin-top: 15px;
+}
+
+
+/* @anusorn */
+#select-photos {
+  background: url(../images/block-bg.png);
+}
+
+.messages {
+ display:none;
 }

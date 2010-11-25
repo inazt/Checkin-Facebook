@@ -14,7 +14,13 @@ define("CHECKIN_DEFAULT_IMAGE_PATH", 'checkin_images', TRUE);
 function checkin_perm() {
   return array('administer places');
 }
+/**
+ * Implementaions of hook_init().
+ */
+ 
+function checkin_init() {
 
+}
 /**
  * Implementations of hook_menu().
  */
@@ -138,20 +144,23 @@ function checkin_detail($cid) {
     $fbuid = $me['id'];
 
     if(is_verified_place($checkin_detail, $num_of_supporters) == CHECKIN_STATUS_CUSTOM_PLACE_OK) {
-      drupal_set_message('verified place', 'custom-place-status');
+      //drupal_set_message('verified place', 'custom-place-status');
     } 
     else {
-      drupal_set_message('unverified place', 'custom-place-status');
+      //drupal_set_message('unverified place', 'custom-place-status');
     }
 
-    $html = sprintf("<div class='custom-place-name'>%s %s</div>", t('สถานที่: '),  $checkin_detail->custom_place);
+    $html = "<div class='checkin-header'><a href='/checkin' id='logo'>เช็คอินที่เที่ยวเหนือ</a></div>"; 
+
+    $html.="<h3 class='first-page-item verify-custom-place'>ยืนยันสถานที่</h3>";
+    $html.= sprintf("<div class='custom-place-name'>%s %s</div>", t('สถานที่: '),  $checkin_detail->custom_place);
     $html.= sprintf("<div class='custom-place-image'><img class='place-image' src=\"%s\" /></div>", $checkin_detail->image_path);
 
     if(has_supported($cid, $fbuid) == FALSE) {
-      $html.= sprintf("<div class='custom-place-action'> <a href=%s>%s</a> </div>", '/checkin/detail/'.$cid.'/support', t('ยืนยัน')); 
+      $html.= sprintf("<div class='custom-place-action'> <a target='_top' href='%s'>%s</a> </div>", 'http://apps.facebook.com/gonorththailand/detail/'.$cid.'/support', t('ยืนยัน')); 
     }
     else {
-      $html.= sprintf("<div class='custom-place-action'> <a href=%s>%s</a> </div>", '/checkin/detail/'.$cid.'/unsupport', 'ยกเลิกการยืนยัน'); 
+      $html.= sprintf("<div class='custom-place-action supported'> <a target='_top' href='%s'>%s</a> </div>", 'http://apps.facebook.com/gonorththailand/detail/'.$cid.'/unsupport', 'ยกเลิกการยืนยัน'); 
     }
 
     $html.= sprintf("<div class='custom-place-supporters-wrapper'> %s (%d คน)",t('รายชื่อผู้ยืนยัน'), $num_of_supporters);
@@ -160,7 +169,7 @@ function checkin_detail($cid) {
       $facebook = checkin_facebook();
        $sup_info= $facebook->api('/'.$supporter->fbuid);
        //drupal_set_message(var_export($sup_info, 1));
-       $html.= sprintf("<a href='http://facebook.com/profile.php?id=%d'>%s</a>", $sup_info['id'], $sup_info['name']);
+       $html.= sprintf("<a target='_top' href='http://facebook.com/profile.php?id=%d'>%s</a>", $sup_info['id'], $sup_info['name']);
      $html.="</div>";
     }
     $html.= sprintf("</div>");
@@ -441,7 +450,7 @@ function checkin_facebook_login($next='checkin') {
       'canvas' => 1,
       'fbconnect' => 0,
       'req_perms' => implode(',', $perms),
-      'next' => url($next, array('absolute' => $absolute, 'query' => $query)),
+      //'next' => url($next, array('absolute' => $absolute, 'query' => $query)),
       'cancel_url' => url('<front>', array('absolute' => TRUE)),
     ));
     $js = 'top.location.href="'. $loginUrl .'"';
@@ -533,7 +542,7 @@ function _send_to_decode_service(&$vars, $opts) {
     // Send image path and callback to QR service.
     $pid = $opts['pid'];
     $fb_link_s = $opts['link']['src_small'];
-    $service_url = 'http://203.151.20.185/decode/';
+    $service_url = variable_get('checkin_qrdecode_service_url', 'http://203.151.20.185/decode/'); 
     $headers = array(
       'X-Requested-With' => 'XMLHttpRequest',
     );
@@ -751,7 +760,7 @@ function manual_place_check() {
   }
   else if($cid) {
     $out = get_checkin_detail($cid);
-    $out->support_url = '/checkin/detail/'.$cid;
+    $out->support_url = '/detail/'.$cid.'/support';
     print drupal_json($out);
   }
   else {
@@ -765,6 +774,10 @@ function check_and_get_facebook_data() {
   $secret = variable_get('checkin_app_secret_key', '');
   return get_facebook_cookie($appId, $secret);
 }
+function checkin_nodeapi(&$node, $op) {
+  //drupal_set_message(print_r($node, 1));
+  //drupal_set_message('ccc');
+}
 function checkin_support($cid, $method) {
   $checkin_detail = get_checkin_detail($cid);
   $payload_status = check_and_get_facebook_data();
@@ -775,11 +788,14 @@ function checkin_support($cid, $method) {
   }
   if($method == 'support') {
     if($payload_status != null) {
-      if (db_query("INSERT INTO {checkin_custom} (cid, fbuid, timestamp) VALUES ('%d', '%d', '%d')", $cid, $payload_status['uid'], time() )) {
+      if (@db_query("INSERT INTO {checkin_custom} (cid, fbuid, timestamp) VALUES ('%d', '%d', '%d')", $cid, $payload_status['uid'], time() )) {
         drupal_goto('checkin/detail/'.$cid);
       }
       else {
          //insert failed
+         drupal_goto('checkin/detail/'.$cid);
+         drupal_access_denied();
+         exit();
       }
     }
     else { 
@@ -807,7 +823,6 @@ function checkin_support($cid, $method) {
   }
 }
 
-
 function get_facebook_cookie($app_id, $application_secret) {
   $args = array();
   parse_str(trim($_COOKIE['fbs_' . $app_id], '\\"'), $args);
@@ -823,3 +838,4 @@ function get_facebook_cookie($app_id, $application_secret) {
   }
   return $args;
 }
+

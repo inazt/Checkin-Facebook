@@ -91,7 +91,7 @@ function job_status() {
             div_section
               .append(div_info)
               .append(input_box)
-              .append(pub.hide());
+              .append(pub);
             $('#server-result').show().append(div_section);
           }
 
@@ -107,10 +107,14 @@ function job_status() {
         }); // end each
         clearInterval(check_job_timer);
     }); //end each
+    var link_over = $('<a />').attr('href', 'http://www.gonorththailand.com').addClass('back-to-gonorth');
+    link_over.html('กลับสู่เว็บไซต์ชุมชนคนเที่ยวเหนือ').attr({'target': '_top'});
+    var link_again = $('<a />').attr({'href': 'http://apps.facebook.com/gonorththailand', 'target': '_top'}).addClass('start-over');
+    link_again.html('เลือกภาพอีกครั้ง');
+	$('#server-result').append(div.clone().addClass('start-over').append(link_again).append(link_over));
     set_state(4);
   }); //end getJson
 }
-
 
 function getAlbums() {
   var data = Photo.Album.getAlbums(FB.getSession().uid);
@@ -311,9 +315,12 @@ $('.decode-error').live('click', function(e) {
     data_obj = JSON.parse(res);
     if(data_obj){
       var support_url = data_obj['support_url'];
-      img_info = support_url;
-      var cid_support_url = window.location.protocol + '//' + location.host+'/'+ support_url;
-      var publish = getCustomPlaceUIOption(img_src, img_info, (input.val()||"no"), cid_support_url);
+      var place_name = (input.val()||"no place");
+      img_info = 'ไปเที่ยวที่ '+ place_name +' มา ขอเชิญเพื่อนๆ เข้ามาเป็นสักขีพยานยืนกันกันหน่อยนะจ๊ะ';
+      //var cid_support_url = window.location.protocol + '//' + location.host+'/'+ support_url;
+      //cid_support_url = cid_support_url +'/support';
+      cid_support_url = 'http://apps.facebook.com/gonorththailand'+ support_url; 
+      var publish = getCustomPlaceUIOption(img_src, img_info, place_name, cid_support_url);
       FB.ui(publish, function(response) {
 		 //remove_review_photo(img_id);
          if (response && response.post_id) {
@@ -371,7 +378,7 @@ $('.start-over').live('click', function(e) {
 function getCustomPlaceUIOption(img_src, img_info, img_title, support_url) {
   var publish = {
     method: 'stream.publish',
-    message: 'Custom place',
+    message: '',
     attachment: {
       name: img_title,
       //caption: 'This is Caption',
@@ -382,7 +389,7 @@ function getCustomPlaceUIOption(img_src, img_info, img_title, support_url) {
       media: [
         {
           type: 'image',
-          href: 'http://gonorth.in.th/',
+          href: 'http://gonorththailand.com/',
           src: img_src
         }
       ]
@@ -408,7 +415,7 @@ function getUIOption(img_src, img_info, img_title) {
       media: [
         {
           type: 'image',
-          href: 'http://gonorth.in.th/',
+          href: 'http://www.gonorththailand.com/',
           src: img_src
         }
       ]
