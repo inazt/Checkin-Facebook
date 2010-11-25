@@ -51,24 +51,25 @@ function checkin_choose_photos() {
     
     
     </script> 
-    <p class='every-page-item selected-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></p>
-    <ul class="tab-nav">
-      <li class='show-all-albums-wrap'> 
-        <button class="show-all-albums" >กลับไปอัลบั้ม</button>
-      </li>
-      <li class='go-review-button-wrap'>
-        <button class="go-review-button">ขั้นตอนต่อไป</button>
-      </li> 
-      <li class='back-all-albums-wrap'>
-        <button class="show-all-albums">เลือกรูปเพิ่ม</button>
-      </li>  
-      <li class='go-checkin-wrap'>
-        <button class="go-checkin">เช็คอิน</button>
-      </li>             
-      <li class='start-over-wrap'>
-        <button class='start-over'>เลือกรูปใหม่</button>
-      </li>
-    </ul>  
+    <div class='checkin-header'><a href='/checkin' id='logo'>เช็คอินที่เที่ยวเหนือ</a></div>
+    <div class='every-page-item selected-photos'>จำนวนรูปที่เลือก<span id='total-review-photos'></span></div>
+    <div class="tab-nav-wrapper">
+      <ul class="tab-nav">
+        <li class='show-all-albums-wrap'> 
+          <button class="show-all-albums" >กลับไปอัลบั้ม</button>
+        </li>
+        <li class='go-review-button-wrap'>
+          <button class="go-review-button">ขั้นตอนต่อไป</button>
+        </li> 
+        <li class='back-all-albums-wrap'>
+          <button class="show-all-albums">เลือกรูปเพิ่ม</button>
+        </li>  
+        <li class='go-checkin-wrap'>
+          <button class="go-checkin">เช็คอิน</button>
+        </li>             
+
+      </ul>  
+    </div>
     <div style='clear:left'></div> 
     <div id='select-photos' class='tab-el active'>
       <div id='fb-albums' class= 'tab-child'>
@@ -86,25 +87,23 @@ function checkin_choose_photos() {
     </div>
     
     <div id='server-result' class='tab-el'></div>
+    <div class="tab-nav-wrapper">
+      <ul class="tab-nav">
+        <li class='show-all-albums-wrap'> 
+          <button class="show-all-albums" >กลับไปอัลบั้ม</button>
+        </li>
+        <li class='go-review-button-wrap'>
+          <button class="go-review-button">ขั้นตอนต่อไป</button>
+        </li>     
+        <li class='back-all-albums-wrap'>
+          <button class="show-all-albums">เลือกรูปเพิ่ม</button>
+        </li>
+        <li class='go-checkin-wrap'>
+          <button class="go-checkin">เช็คอิน</button>
+        </li> 
 
-    <ul class="tab-nav">
-      <li class='show-all-albums-wrap'> 
-        <button class="show-all-albums" >กลับไปอัลบั้ม</button>
-      </li>
-      <li class='go-review-button-wrap'>
-        <button class="go-review-button">ขั้นตอนต่อไป</button>
-      </li>     
-      <li class='back-all-albums-wrap'>
-        <button class="show-all-albums">เลือกรูปเพิ่ม</button>
-      </li>
-      <li class='go-checkin-wrap'>
-        <button class="go-checkin">เช็คอิน</button>
-      </li> 
-      <li class='start-over-wrap'>
-        <button class='start-over'>เลือกรูปใหม่</button>
-      </li>
-          
-    </ul>     
+      </ul>     
+    </div>
 FBJS;
   
   return $output;
